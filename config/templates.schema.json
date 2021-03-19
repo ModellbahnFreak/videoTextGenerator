@@ -14,17 +14,15 @@
         "templates": {
             "type": "array",
             "items": {
-                "required": [
-                    "id",
-                    "type"
-                ],
-                "type": "object",
-                "anyOf": [
+                "allOf": [
                     {
                         "$ref": "#/definitions/template"
                     },
                     {
                         "type": "object",
+                        "required": [
+                            "id"
+                        ],
                         "properties": {
                             "id": {
                                 "type": "string"

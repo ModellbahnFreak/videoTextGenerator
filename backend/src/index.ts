@@ -3,6 +3,9 @@ import * as http from "http";
 import io from "socket.io";
 import { configLoader } from "./config/configLoader";
 import { TemplatesConfig } from "./config/Templates";
+import cors from "cors";
+import { PresetsConfig } from "./config/Presets";
+import * as path from "path";
 
 const app = express();
 const server = http.createServer(app);
@@ -10,6 +13,10 @@ const socketServer = new io.Server(server);
 const viewers: Set<io.Socket> = new Set();
 const editors: Set<io.Socket> = new Set();
 const templatesConfig = configLoader<TemplatesConfig>("templates");
+const presetsConfig = configLoader<PresetsConfig>("presets");
+let activePreset: string | undefined;
+
+app.use(cors());
 
 app.get("/", (req, res) => {
     res.status(200).end(`<!DOCTYPE html>
@@ -20,20 +27,42 @@ app.get("/", (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Text-Generator Viewer</title>
     </head>
-    <body>
-    <script src="socket.io/socket.io.js"></script>
+    <body style="margin: 0; font-size:10vh">
+    <script src="/socket.io/socket.io.js"></script>
     <script src="index.js" type="module"></script>
     </body>
     </html>`);
 });
 app.use("/", express.static("frontend/out/viewer"));
+app.get("/edit/", (req, res) => {
+    res.sendFile(
+        path.join(process.cwd(), "frontend", "src", "editor", "index.html")
+    );
+});
 app.get("/edit", (req, res) => {
-    res.sendFile("frontend/src/editor/index.html");
+    res.redirect("/edit/");
 });
 app.use("/edit", express.static("frontend/out/editor"));
 
 //DEBUG:
 app.use("/src", express.static("frontend/src"));
+
+function editorMsgReceived(data: any) {
+    if (typeof data == "object") {
+        if (data.type === "setNamedPreset" && typeof data.id === "string") {
+            const preset = presetsConfig.presets.find((p) => p.id == data.id);
+            if (preset) {
+                activePreset = preset.id;
+                viewers.forEach((v) => {
+                    v.emit("viewer", {
+                        type: "setPreset",
+                        preset,
+                    });
+                });
+            }
+        }
+    }
+}
 
 socketServer.on("connection", (socket) => {
     console.log("Connection");
@@ -47,14 +76,35 @@ socketServer.on("connection", (socket) => {
                         type: "templatesConfig",
                         config: templatesConfig,
                     });
+                    if (activePreset) {
+                        const preset = presetsConfig.presets.find(
+                            (p) => p.id == activePreset
+                        );
+                        if (preset) {
+                            socket.emit("viewer", {
+                                type: "setPreset",
+                                preset,
+                            });
+                        }
+                    }
                 } else if (data.channel == "editor") {
                     editors.add(socket);
+                    socket.emit("editor", {
+                        type: "templatesConfig",
+                        config: templatesConfig,
+                    });
+                    socket.emit("editor", {
+                        type: "presetsConfig",
+                        config: presetsConfig,
+                    });
+                    socket.on("editor", editorMsgReceived);
                 }
             } else if (data.type == "unsubscribe") {
                 if (data.channel == "viewer") {
                     viewers.delete(socket);
                 } else if (data.channel == "editor") {
                     editors.delete(socket);
+                    socket.on("editor", editorMsgReceived);
                 }
             }
         }

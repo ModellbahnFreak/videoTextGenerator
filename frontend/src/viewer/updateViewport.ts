@@ -3,7 +3,7 @@ import { Template } from "./Template.js";
 export function updateViewport(
     templates: (Template & { id: string })[],
     viewportObjects: Map<string, HTMLElement>,
-    presetTextFields: Map<string, HTMLElement[]>
+    presetTextFields: Map<string, Set<HTMLElement>>
 ) {
     const elemToRemove = new Set(viewportObjects.keys());
     templates.forEach((t) => {
@@ -22,71 +22,130 @@ export function updateViewport(
 export function updateViewportObject(
     template: Template & { id: string },
     viewportObjects: Map<string, HTMLElement>,
-    presetTextFields: Map<string, HTMLElement[]>
+    presetTextFields: Map<string, Set<HTMLElement>>
 ) {
     let existingElem = viewportObjects.get(template.id);
-    if (existingElem) {
-        existingElem.remove();
-    }
-    existingElem = createViewportObject(
+    existingElem = updateExistingViewportObject(
         template,
+        existingElem,
         presetTextFields,
+        template.id,
         template.id
     );
     document.body.appendChild(existingElem);
     viewportObjects.set(template.id, existingElem);
 }
 
-function createViewportObject(
+function updateExistingViewportObject(
     template: Template,
-    presetTextFields: Map<string, HTMLElement[]>,
+    elem: HTMLElement | undefined,
+    presetTextFields: Map<string, Set<HTMLElement>>,
+    name: string,
     id?: string
 ): HTMLElement {
-    let elem: HTMLElement;
+    let newElem = elem;
     switch (template.type) {
         case "div":
-            elem = document.createElement("div");
+            if (
+                !(
+                    typeof elem === "object" &&
+                    elem.nodeName.toLowerCase() == "div"
+                )
+            ) {
+                console.log("Creating new div");
+                elem?.remove();
+                newElem = document.createElement("div");
+            }
             break;
         case "span":
-            elem = document.createElement("span");
+            if (
+                !(
+                    typeof elem === "object" &&
+                    elem.nodeName.toLowerCase() == "span"
+                )
+            ) {
+                console.log("Creating new span");
+                elem?.remove();
+                newElem = document.createElement("span");
+            }
             break;
         case "presetText":
-            elem = document.createElement("div");
+            if (
+                !(
+                    typeof elem === "object" &&
+                    elem.nodeName.toLowerCase() == "div"
+                )
+            ) {
+                console.log("Creating new presetText");
+                elem?.remove();
+                newElem = document.createElement("div");
+            }
             break;
         default:
             throw new Error("Illegal node type");
     }
-    if (id) {
-        elem.id = id;
+    if (!newElem) {
+        throw new Error("Error on creating updating");
     }
-    if (template.style) {
-        for (const styleKey in template.style) {
-            if (
-                Object.prototype.hasOwnProperty.call(template.style, styleKey)
-            ) {
-                const styleValue = template.style[styleKey];
-                (elem.style as any)[styleKey] = styleValue;
-            }
+    newElem.className = name;
+    if (id) {
+        newElem.id = id;
+    }
+
+    applyStyles(newElem, template.style);
+
+    const oldPresetTextKey = elem?.getAttribute("presetTextKey");
+    if (elem && typeof oldPresetTextKey === "string") {
+        const oldPresetFields = presetTextFields.get(oldPresetTextKey);
+        if (oldPresetFields) {
+            oldPresetFields.delete(elem);
         }
+        elem.removeAttribute("presetTextKey");
     }
     if (template.type == "presetText") {
         if (typeof template.text !== "string") {
             throw new Error(
-                "For type presetText text field must specify preset text id"
+                "For type presetText 'text' field must specify preset text id"
             );
         }
         let presetFields = presetTextFields.get(template.text);
         if (!presetFields) {
-            presetFields = [];
+            presetFields = new Set();
             presetTextFields.set(template.text, presetFields);
         }
-        presetFields.push(elem);
+        presetFields.add(newElem);
+        newElem.setAttribute("presetTextKey", template.text);
     } else if (typeof template.text === "string") {
-        elem.innerText = template.text;
+        newElem.innerText = template.text;
     } else if (typeof template.children === "object") {
-        template.children.forEach((t) => {
-            elem.appendChild(createViewportObject(t, presetTextFields));
+        template.children.forEach((t, index) => {
+            const oldElemChild = document.getElementsByClassName(
+                `child${index}`
+            )[0];
+            newElem?.appendChild(
+                updateExistingViewportObject(
+                    t,
+                    oldElemChild as HTMLElement,
+                    presetTextFields,
+                    `child${index}`
+                )
+            );
         });
     }
-    return elem;
+
+    return newElem;
+}
+
+export function applyStyles(
+    elem: HTMLElement,
+    styles?: { [styleKey: string]: string }
+) {
+    if (styles) {
+        for (const styleKey in styles) {
+            if (Object.prototype.hasOwnProperty.call(styles, styleKey)) {
+                const styleValue = styles[styleKey];
+                (elem.style as any)[styleKey] = styleValue;
+            }
+        }
+    }
 }
