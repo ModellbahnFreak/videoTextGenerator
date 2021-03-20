@@ -1,5 +1,5 @@
 import { setPreset } from "./setPreset.js";
-import { Template } from "./Template.js";
+import { Template } from "../config/Template.js";
 import {
     applyStyles,
     updateViewport,

@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "type": "object",
+    "required": [
+        "playlists"
+    ],
+    "properties": {
+        "$schema": {
+            "type": "string"
+        },
+        "playlists": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "presets"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "presets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

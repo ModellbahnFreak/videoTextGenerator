@@ -1,4 +1,4 @@
-import { Preset } from "./Presets.js";
+import { Preset } from "../config/Presets.js";
 import { applyStyles } from "./updateViewport.js";
 
 export function setPreset(

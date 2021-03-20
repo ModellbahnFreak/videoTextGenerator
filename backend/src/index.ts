@@ -6,6 +6,7 @@ import { TemplatesConfig } from "./config/Templates";
 import cors from "cors";
 import { PresetsConfig } from "./config/Presets";
 import * as path from "path";
+import { PlaylistsConfig } from "./config/Playlists";
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +15,7 @@ const viewers: Set<io.Socket> = new Set();
 const editors: Set<io.Socket> = new Set();
 const templatesConfig = configLoader<TemplatesConfig>("templates");
 const presetsConfig = configLoader<PresetsConfig>("presets");
+const playlistsConfig = configLoader<PlaylistsConfig>("playlists");
 let activePreset: string | undefined;
 
 app.use(cors());
@@ -34,15 +36,20 @@ app.get("/", (req, res) => {
     </html>`);
 });
 app.use("/", express.static("frontend/out/viewer"));
-app.get("/edit/", (req, res) => {
-    res.sendFile(
-        path.join(process.cwd(), "frontend", "src", "editor", "index.html")
-    );
-});
 app.get("/edit", (req, res) => {
-    res.redirect("/edit/");
+    if (req.path.endsWith("/")) {
+        res.sendFile(
+            path.join(process.cwd(), "frontend", "src", "editor", "index.html")
+        );
+    } else {
+        res.redirect("/edit/");
+    }
 });
 app.use("/edit", express.static("frontend/out/editor"));
+app.use(
+    "/material-components-web",
+    express.static("node_modules/material-components-web")
+);
 
 //DEBUG:
 app.use("/src", express.static("frontend/src"));
@@ -57,6 +64,12 @@ function editorMsgReceived(data: any) {
                     v.emit("viewer", {
                         type: "setPreset",
                         preset,
+                    });
+                });
+                editors.forEach((v) => {
+                    v.emit("editor", {
+                        type: "setNamedPreset",
+                        id: preset.id,
                     });
                 });
             }
@@ -96,6 +109,14 @@ socketServer.on("connection", (socket) => {
                     socket.emit("editor", {
                         type: "presetsConfig",
                         config: presetsConfig,
+                    });
+                    socket.emit("editor", {
+                        type: "playlistsConfig",
+                        config: playlistsConfig,
+                    });
+                    socket.emit("editor", {
+                        type: "setNamedPreset",
+                        id: activePreset,
                     });
                     socket.on("editor", editorMsgReceived);
                 }
