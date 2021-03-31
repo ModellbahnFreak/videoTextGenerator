@@ -22,6 +22,11 @@ export default new Vuex.Store({
         deleteActive(state, key: string) {
             Vue.delete(state.isActive, key);
         },
+        clearAll(state) {
+            console.log("Clearall");
+            Vue.set(state, "textData", {});
+            Vue.set(state, "isActive", {});
+        },
     },
     actions: {},
     modules: {},

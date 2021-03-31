@@ -58,6 +58,8 @@ export default class Viewer extends Vue {
                                 }
                             }
                         });
+                    } else if (data.type == "clearAll") {
+                        this.$store.commit("clearAll");
                     }
                 }
             }

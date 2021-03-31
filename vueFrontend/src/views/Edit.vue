@@ -2,8 +2,25 @@
     <div>
         <v-container>
             <v-row>
-                <v-col>
+                <v-col class="pb-0">
                     <v-btn text @click="reloadConfig()">Reload config</v-btn>
+                    <v-btn text @click="clearAll()" color="error"
+                        >Clear all</v-btn
+                    >
+                </v-col>
+            </v-row>
+            <v-row>
+                <v-col class="pt-0">
+                    <v-text-field label="String key" v-model="manualKey" />
+                </v-col>
+                <v-col class="pt-0">
+                    <v-text-field label="Display Text" v-model="manualValue" />
+                </v-col>
+                <v-col
+                    class="pt-0"
+                    style="flex-grow: 0; flex-shrink:0; margin-top:auto; margin-bottom: auto"
+                >
+                    <v-btn text color="success" @click="setManual()">Set</v-btn>
                 </v-col>
             </v-row>
             <v-form ref="form" v-model="formValid">
@@ -128,6 +145,8 @@ export default class Edit extends Vue {
     openCuelists: { name: string; currIndex: number; selIndex: number }[] = [];
     formValid: boolean = false;
     selCuelist: string = "";
+    manualKey = "";
+    manualValue = "";
 
     sendSubscribe() {
         this.$socket.send({
@@ -210,6 +229,26 @@ export default class Edit extends Vue {
     reloadConfig() {
         this.$socket.emit("editor", {
             type: "reloadConfig",
+        });
+    }
+
+    clearAll() {
+        this.$socket.emit("editor", {
+            type: "clearAll",
+        });
+    }
+
+    setManual() {
+        const cue: Cue = {
+            name: "ManuallySet",
+            value: this.manualValue,
+            isActive: !!this.manualValue,
+            stringKey: this.manualKey,
+        };
+        this.$socket.emit("editor", {
+            type: "set",
+            cue: [cue],
+            stringKey: this.manualKey,
         });
     }
 

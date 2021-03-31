@@ -41,8 +41,18 @@ app.use(
     )
 );
 app.use("*", (req, res) => {
-    console.log("Fallback");
-    res.redirect("/");
+    res.sendFile(
+        path.normalize(
+            path.join(
+                __dirname,
+                "..",
+                "..",
+                "vueFrontend",
+                "dist",
+                "index.html"
+            )
+        )
+    );
 });
 
 function editorMsgReceived(data: any) {
@@ -72,6 +82,17 @@ function editorMsgReceived(data: any) {
                 v.emit("editor", {
                     type: "config",
                     config: config,
+                });
+            });
+        } else if (data.type == "clearAll") {
+            viewers.forEach((v) => {
+                v.emit("viewer", {
+                    type: data.type,
+                });
+            });
+            editors.forEach((v) => {
+                v.emit("editor", {
+                    type: data.type,
                 });
             });
         }

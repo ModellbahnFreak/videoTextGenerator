@@ -16,9 +16,8 @@ Vue.config.productionTip = false;
 
 if (!Vue.prototype.$socket || !Vue.prototype.$socket.connected) {
     const socket = io(process.env.VUE_APP_WS_URL);
+    Vue.prototype.$socket = socket;
 }
-
-Vue.prototype.$socket = socket;
 
 export const vue = new Vue({
     router,
