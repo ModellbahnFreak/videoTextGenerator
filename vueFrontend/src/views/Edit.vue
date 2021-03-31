@@ -1,9 +1,7 @@
 <template>
-    <v-app>
-        <v-main>
-            <router-view />
-        </v-main>
-    </v-app>
+    <div>
+        Editor
+    </div>
 </template>
 
 <script lang="ts">
@@ -11,7 +9,7 @@ import Vue from "vue";
 import { Component } from "vue-property-decorator";
 
 @Component({
-    name: "App",
+    name: "Edit",
 })
-export default class App extends Vue {}
+export default class Edit extends Vue {}
 </script>
