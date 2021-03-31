@@ -1,6 +1,11 @@
 <template>
     <div>
         <v-container>
+            <v-row>
+                <v-col>
+                    <v-btn text @click="reloadConfig()">Reload config</v-btn>
+                </v-col>
+            </v-row>
             <v-form ref="form" v-model="formValid">
                 <v-row>
                     <v-col>
@@ -124,12 +129,17 @@ export default class Edit extends Vue {
     formValid: boolean = false;
     selCuelist: string = "";
 
-    created() {
-        const that = this;
+    sendSubscribe() {
         this.$socket.send({
             type: "subscribe",
             channel: "editor",
         });
+    }
+
+    created() {
+        const that = this;
+        this.sendSubscribe();
+        this.$socket.on("connect", this.sendSubscribe.bind(this));
         this.$socket.on("editor", (data: { type: string; config?: Config }) => {
             if (typeof data == "object" && typeof data.type === "string") {
                 if (data.type == "set") {
@@ -147,22 +157,38 @@ export default class Edit extends Vue {
         });
     }
 
+    beforeDestroy() {
+        this.$socket.off("connect", this.sendSubscribe.bind(this));
+    }
+
     goCuelist(num: number, steps: number) {
-        const list = this.openCuelists[num];
-        const numSteps = this.cuelists.get(list?.name)?.cues?.length;
-        if (list && numSteps) {
-            this.goToCuelist(
-                num,
-                (this.openCuelists[num]?.currIndex + steps) % numSteps
-            );
+        const openList = this.openCuelists[num];
+        if (openList) {
+            this.goToCuelist(num, this.openCuelists[num]?.currIndex + steps);
         }
     }
 
     goToCuelist(num: number, absStep: number) {
-        const list = this.openCuelists[num];
-        if (list) {
-            list.currIndex = absStep;
-            list.selIndex = absStep;
+        const openList = this.openCuelists[num];
+        const list = this.cuelists.get(openList?.name);
+        const numSteps = list?.cues?.length;
+        if (openList && list && numSteps) {
+            openList.currIndex = absStep % numSteps;
+            openList.selIndex = openList.currIndex;
+            const cue = list.cues[openList.currIndex];
+            if (cue instanceof Array) {
+                this.$socket.emit("editor", {
+                    type: "set",
+                    cue: cue,
+                    stringKey: list.stringKey || "",
+                });
+            } else {
+                this.$socket.emit("editor", {
+                    type: "set",
+                    cue: [cue],
+                    stringKey: list.stringKey || "",
+                });
+            }
         }
     }
 
@@ -179,6 +205,12 @@ export default class Edit extends Vue {
 
     removeCuelist(num: number) {
         this.openCuelists.splice(num, 1);
+    }
+
+    reloadConfig() {
+        this.$socket.emit("editor", {
+            type: "reloadConfig",
+        });
     }
 
     get existingCuelistNames(): string[] {

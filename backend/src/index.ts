@@ -5,6 +5,7 @@ import { configLoader } from "./config/configLoader";
 import cors from "cors";
 import * as path from "path";
 import { Config } from "./config/Config";
+import { configMerger } from "./config/configMerger";
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +16,7 @@ const socketServer = new io.Server(server, {
 });
 const viewers: Set<io.Socket> = new Set();
 const editors: Set<io.Socket> = new Set();
-const config = configLoader<Config>("config");
+let config = configMerger(configLoader<Config>("config"));
 
 app.use(cors());
 
@@ -63,6 +64,14 @@ function editorMsgReceived(data: any) {
                     type: "set",
                     stringKey: data.stringKey,
                     cue: data.cue,
+                });
+            });
+        } else if (data.type == "reloadConfig") {
+            config = configMerger(configLoader<Config>("config"));
+            editors.forEach((v) => {
+                v.emit("editor", {
+                    type: "config",
+                    config: config,
                 });
             });
         }

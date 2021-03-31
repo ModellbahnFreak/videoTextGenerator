@@ -1,21 +1,25 @@
 <template>
-    <div class="lowerThirdContainer">
-        {{ lowerThirdText }}
+    <div
+        class="lowerThirdContainer"
+        :style="{ opacity: this.$store.state.isActive.lowerThird ? 1 : 0 }"
+    >
+        <span v-html="lowerThirdText" style="vertical-align:middle"></span>
     </div>
 </template>
 
 <style>
 .lowerThirdContainer {
     width: 84vw;
-    height: 5vh;
+    height: 10vh;
     padding: 2vh;
     padding-left: 5vw;
     padding-right: 1vw;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(83, 83, 83, 0.5);
+    color: white;
     font-size: 5vh;
-    position: absolute;
-    bottom: 8vh;
     line-height: 1em;
+    position: absolute;
+    bottom: 10vh;
     left: 5vw;
     opacity: 1;
     transition: opacity 0.25s ease-in-out 0s;
@@ -25,13 +29,16 @@
 <script lang="ts">
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
+import { TextComponent } from "./TextComponent";
 
 @Component({
     name: "LowerThird",
 })
-export default class LowerThird extends Vue {
+export default class LowerThird extends Vue implements TextComponent {
     get lowerThirdText(): string {
         return this.$store.state.textData.lowerThird;
     }
+
+    setMsg() {}
 }
 </script>

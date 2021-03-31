@@ -4,11 +4,13 @@
             v-for="comp in componentsList"
             :key="comp.name"
             :is="comp.component"
+            ref="textComp"
         ></component>
     </div>
 </template>
 
 <script lang="ts">
+import { TextComponent } from "@/components/TextComponent";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { allComponents, allComponentsList } from "../components/allComponents";
@@ -22,11 +24,16 @@ import { Cue } from "../Config";
     },
 })
 export default class Viewer extends Vue {
-    created() {
+    sendSubscribe() {
         this.$socket.send({
             type: "subscribe",
             channel: "viewer",
         });
+    }
+
+    created() {
+        this.sendSubscribe();
+        this.$socket.on("connect", this.sendSubscribe.bind(this));
         this.$socket.on(
             "viewer",
             (data: { type: string; cue?: Cue | Cue[]; stringKey: string }) => {
@@ -38,12 +45,27 @@ export default class Viewer extends Vue {
                             if (typeof cue === "object") {
                                 this.updateActiveForCue(cueStringKey, cue);
                                 this.updateValueForCue(cueStringKey, cue);
+                                if (this.$refs.textComp instanceof Array) {
+                                    (this.$refs
+                                        .textComp as TextComponent[]).forEach(
+                                        (c) => {
+                                            c.setMsg(cue);
+                                        }
+                                    );
+                                } else {
+                                    (this.$refs
+                                        .textComp as TextComponent).setMsg(cue);
+                                }
                             }
                         });
                     }
                 }
             }
         );
+    }
+
+    beforeDestroy() {
+        this.$socket.off("connect", this.sendSubscribe.bind(this));
     }
 
     updateActiveForCue(cueStringKey: string, cue: Cue) {
