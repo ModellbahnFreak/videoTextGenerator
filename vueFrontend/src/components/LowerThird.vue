@@ -31,7 +31,7 @@ import { Component } from "vue-property-decorator";
 })
 export default class LowerThird extends Vue {
     get lowerThirdText(): string {
-        return "Hallo Welt";
+        return this.$store.state.textData.lowerThird;
     }
 }
 </script>
