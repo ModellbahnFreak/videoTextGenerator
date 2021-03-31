@@ -1,0 +1,47 @@
+{
+    "$schema": "./config.schema.json",
+    "cuelists": [
+        {
+            "name": "gruendonnerstagLiednummern",
+            "stringKey": "lowerThird",
+            "cues": [
+                {
+                    "name": "Eingang",
+                    "value": "GL 477  1 + 2"
+                },
+                {
+                    "name": "Gloria",
+                    "value": "GL 167"
+                },
+                {
+                    "name": "Zwischengesang",
+                    "value": "GL 442  1 + 2"
+                },
+                {
+                    "name": "Ruf",
+                    "value": "GL 305  4"
+                },
+                {
+                    "name": "Fuerbitten",
+                    "value": "GL 11  5"
+                },
+                {
+                    "name": "Gabenlied",
+                    "value": "GL 281  1 - 4"
+                },
+                {
+                    "name": "Sanktus",
+                    "value": "Schubert - Heilig"
+                },
+                {
+                    "name": "Dank",
+                    "value": "GL 290"
+                },
+                {
+                    "name": "Uebertragung",
+                    "value": "GL 561"
+                }
+            ]
+        }
+    ]
+}
