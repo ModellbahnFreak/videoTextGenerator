@@ -1,11 +1,11 @@
 import express from "express";
 import * as http from "http";
 import io from "socket.io";
-import { configLoader } from "./config/configLoader";
+import { configLoader } from "./configLoading/configLoader";
 import cors from "cors";
 import * as path from "path";
-import { Config } from "./config/Config";
-import { configMerger } from "./config/configMerger";
+import { Config } from "./configLoading/Config";
+import { configMerger } from "./configLoading/configMerger";
 
 const app = express();
 const server = http.createServer(app);
