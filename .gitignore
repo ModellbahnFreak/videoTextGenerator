@@ -1,6 +1,8 @@
 out
 **/config/*
 !**/config/[A-Za-z]*.schema.json
+subtitleGenerator/*.txt
+subtitleGenerator/*.json
 
 # Logs
 logs
