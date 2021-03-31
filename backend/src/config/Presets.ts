@@ -2,7 +2,7 @@ export interface PresetsConfig {
     presets: Preset[];
 }
 
-interface Preset {
+export interface Preset {
     id: string;
     styles: {
         id: string;

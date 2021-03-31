@@ -28,6 +28,39 @@
                     }
                 }
             }
+        },
+        "textCuelist": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "templateId",
+                    "activeStyle",
+                    "inactiveStyle",
+                    "texts"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "templateId": {
+                        "type": "string"
+                    },
+                    "activeStyle": {
+                        "type": "object"
+                    },
+                    "inactiveStyle": {
+                        "type": "object"
+                    },
+                    "texts": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     }
 }

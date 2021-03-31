@@ -4,7 +4,7 @@ import io from "socket.io";
 import { configLoader } from "./config/configLoader";
 import { TemplatesConfig } from "./config/Templates";
 import cors from "cors";
-import { PresetsConfig } from "./config/Presets";
+import { Preset, PresetsConfig } from "./config/Presets";
 import * as path from "path";
 import { PlaylistsConfig } from "./config/Playlists";
 
@@ -73,6 +73,41 @@ function editorMsgReceived(data: any) {
                     });
                 });
             }
+        } else if (
+            data.type === "setValue" &&
+            typeof data.id === "string" &&
+            typeof data.value === "string" &&
+            typeof data.style === "object"
+        ) {
+            const preset: Preset = {
+                id: Math.random().toString(),
+                styles: [
+                    {
+                        id: data.id,
+                        style: data.style,
+                    },
+                ],
+                text: [
+                    {
+                        key: data.id,
+                        value: data.value,
+                    },
+                ],
+            };
+            viewers.forEach((v) => {
+                v.emit("viewer", {
+                    type: "setPreset",
+                    preset,
+                });
+            });
+            editors.forEach((v) => {
+                v.emit("editor", {
+                    type: "setValue",
+                    id: data.id,
+                    value: data.value,
+                    style: data.style,
+                });
+            });
         }
     }
 }

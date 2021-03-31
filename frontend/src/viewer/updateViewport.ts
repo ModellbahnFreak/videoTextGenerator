@@ -1,4 +1,4 @@
-import { Template } from "./Template.js";
+import { Template } from "../config/Template.js";
 
 export function updateViewport(
     templates: (Template & { id: string })[],
