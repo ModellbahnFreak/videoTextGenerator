@@ -1,0 +1,15 @@
+{
+    "$schema": "./playlists.schema.json",
+    "playlists": [
+        {
+            "id": "Lieder",
+            "presets": [
+                "noLowerThird",
+                "lied1",
+                "noLowerThird",
+                "lied2",
+                "noLowerThird"
+            ]
+        }
+    ]
+}
