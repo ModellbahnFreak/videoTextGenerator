@@ -1,6 +1,6 @@
 out
-config/*
-!config/[A-Za-z]*.schema.json
+**/config/*
+!**/config/[A-Za-z]*.schema.json
 
 # Logs
 logs
