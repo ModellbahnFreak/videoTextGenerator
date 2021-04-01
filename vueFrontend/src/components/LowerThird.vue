@@ -1,23 +1,33 @@
 <template>
-    <div
-        class="lowerThirdContainer"
-        :style="{
-            opacity: isActive ? 1 : 0,
-            height: !!lowerThirdSubtitle ? '12.5vh' : '9vh',
-        }"
-    >
-        <div v-html="lowerThirdText" class="lowerThirdText"></div>
-        <div v-html="lowerThirdSubtitle" class="lowerThirdSubtitle"></div>
+    <div class="lowerThirdOuterContainer" ref="lowerThirdOuterContainer">
+        <v-row
+            class="lowerThirdContainer"
+            ref="lowerThirdContainer"
+            :style="{
+                height: !!lowerThirdSubtitle ? '12.5vh' : '9vh',
+            }"
+        >
+            <v-col
+                style="flex-grow: 0; flex-shrink:0;height:8.5vh;"
+                class="pa-0"
+            >
+                <img src="logo.png" style="height: 100%;" />
+            </v-col>
+            <v-col class="pa-0">
+                <div v-html="lowerThirdText" class="lowerThirdText"></div>
+                <div
+                    v-html="lowerThirdSubtitle"
+                    class="lowerThirdSubtitle"
+                ></div>
+            </v-col>
+        </v-row>
     </div>
 </template>
 
 <style>
-.lowerThirdContainer {
-    width: 84vw;
+.lowerThirdOuterContainer {
+    width: 0;
     height: 12.5vh;
-    padding: 2vh;
-    padding-left: 5vw;
-    padding-right: 1vw;
     background: rgba(83, 83, 83, 0.5);
     color: white;
     font-size: 5vh;
@@ -26,6 +36,18 @@
     bottom: 10vh;
     left: 5vw;
     opacity: 1;
+    transition: width 0.25s ease-in-out 0s;
+}
+
+.lowerThirdContainer {
+    opacity: 0;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 2vh;
+    padding-left: 2vw;
+    padding-right: 1vw;
+    flex-wrap: nowrap !important;
     transition: opacity 0.25s ease-in-out 0s;
 }
 
@@ -43,7 +65,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import { TextComponent } from "./TextComponent";
 
 @Component({
@@ -60,6 +82,40 @@ export default class LowerThird extends Vue implements TextComponent {
 
     get isActive(): boolean | undefined {
         return this.$store.state.isActive.lowerThird;
+    }
+
+    @Watch("isActive")
+    activeChanged(newState: boolean | undefined) {
+        if (newState) {
+            (this.$refs
+                .lowerThirdOuterContainer as HTMLDivElement).style.width =
+                "84vw";
+            setTimeout(() => {
+                if (this.isActive) {
+                    (this.$refs
+                        .lowerThirdContainer as HTMLDivElement).style.opacity =
+                        "1";
+                } else {
+                    (this.$refs
+                        .lowerThirdContainer as HTMLDivElement).style.opacity =
+                        "0";
+                }
+            }, 200);
+        } else {
+            (this.$refs.lowerThirdContainer as HTMLDivElement).style.opacity =
+                "0";
+            setTimeout(() => {
+                if (!this.isActive) {
+                    (this.$refs
+                        .lowerThirdOuterContainer as HTMLDivElement).style.width =
+                        "0";
+                } else {
+                    (this.$refs
+                        .lowerThirdOuterContainer as HTMLDivElement).style.width =
+                        "84vw";
+                }
+            }, 200);
+        }
     }
 
     setMsg() {}
