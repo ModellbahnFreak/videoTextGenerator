@@ -64,9 +64,13 @@
                                     ).cues"
                                     :key="cueI"
                                 >
-                                    <v-list-item-icon
-                                        >{{ cueI }}:</v-list-item-icon
-                                    >
+                                    <v-list-item-icon class="mr-2">
+                                        <v-btn
+                                            text
+                                            @click="goToCuelist(i, cueI)"
+                                            >{{ cueI }}:</v-btn
+                                        >
+                                    </v-list-item-icon>
                                     <v-list-item-content
                                         :style="{
                                             color:

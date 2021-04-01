@@ -88,13 +88,13 @@ export default class Viewer extends Vue {
     }
 
     updateValueForCue(cueStringKey: string, cue: Cue) {
-        if (typeof cue.value === "undefined") {
-            this.$store.commit("deleteKey", cueStringKey);
-        } else if (typeof cue.value === "string") {
+        if (typeof cue.value === "string") {
             this.$store.commit("updateKey", {
                 key: cueStringKey,
                 value: cue.value,
             });
+        } else if (cue.value === null) {
+            this.$store.commit("deleteKey", cueStringKey);
         }
     }
 
