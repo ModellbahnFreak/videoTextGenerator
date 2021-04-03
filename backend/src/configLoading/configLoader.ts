@@ -14,10 +14,11 @@ export function configLoader<ConfigType>(name: string): ConfigType[] {
                 fs.readFileSync(`${name}/${f}`, "utf8")
             ) as ConfigType;
             if (!validator(config)) {
-                throw new Error(
-                    `Illegal config: ${JSON.stringify(validator.errors)}`
-                );
+                console.error(`Illegal config:`, validator.errors);
+                return { config, success: false };
             }
-            return config;
-        });
+            return { config, success: true };
+        })
+        .filter((c) => c.success)
+        .map((c) => c.config);
 }
