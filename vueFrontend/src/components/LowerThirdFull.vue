@@ -215,7 +215,7 @@ export default class LowerThirdFull extends Vue implements TextComponent {
     changeSubtitleVisible(newState: boolean | undefined) {
         if (newState) {
             (this.$refs
-                .lowerThirdFullSubtitleContainer as HTMLDivElement).style.visibility =
+                .lowerThirdFullSubtitleContainer as HTMLDivElement).style.height =
                 "";
             (this.$refs
                 .lowerThirdFullSubtitleContainer as HTMLDivElement).style.opacity =
@@ -226,8 +226,8 @@ export default class LowerThirdFull extends Vue implements TextComponent {
                 "0";
             setTimeout(() => {
                 (this.$refs
-                    .lowerThirdFullSubtitleContainer as HTMLDivElement).style.visibility =
-                    "collapse";
+                    .lowerThirdFullSubtitleContainer as HTMLDivElement).style.height =
+                    "0";
             }, this.animationDuration);
         }
     }
