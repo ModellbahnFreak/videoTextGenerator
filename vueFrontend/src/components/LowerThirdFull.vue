@@ -4,23 +4,32 @@
         ref="lowerThirdFullOuterContainer"
     >
         <v-row class="lowerThirdFullContainer" ref="lowerThirdFullContainer">
-            <div v-html="lowerThirdFullText" class="lowerThirdFullText"></div>
+            <div class="lowerThirdFullTitleContainer">
+                <div
+                    v-html="lowerThirdFullTextA"
+                    class="lowerThirdFullText"
+                    :style="{
+                        opacity: ltState == 1 ? '1' : '0',
+                        position: ltState == 1 ? undefined : 'absolute',
+                    }"
+                ></div>
+                <div
+                    v-html="lowerThirdFullTextB"
+                    class="lowerThirdFullText"
+                    :style="{
+                        opacity: ltState == 2 ? '1' : '0',
+                        position: ltState == 2 ? undefined : 'absolute',
+                    }"
+                ></div>
+            </div>
             <div
                 class="lowerThirdFullSubtitleContainer"
-                :style="{
-                    height: hasSubtitle ? undefined : '0',
-                    visibility: hasSubtitle ? undefined : 'hidden',
-                }"
+                ref="lowerThirdFullSubtitleContainer"
             >
                 <div
                     v-html="lowerThirdFullSubtitleA"
                     :style="{
-                        height: subtitleState == 1 ? undefined : '0',
-                        opacity:
-                            subtitleState == 1 &&
-                            $store.state.isActive.lowerThirdFullSubtitleA
-                                ? '1'
-                                : '0',
+                        opacity: subtitleState == 1 ? '1' : '0',
                         position: subtitleState == 1 ? undefined : 'absolute',
                     }"
                     class="lowerThirdFullSubtitle"
@@ -28,12 +37,7 @@
                 <div
                     v-html="lowerThirdFullSubtitleB"
                     :style="{
-                        height: subtitleState == 2 ? undefined : '0',
-                        opacity:
-                            subtitleState == 2 &&
-                            $store.state.isActive.lowerThirdFullSubtitleB
-                                ? '1'
-                                : '0',
+                        opacity: subtitleState == 2 ? '1' : '0',
                         position: subtitleState == 2 ? undefined : 'absolute',
                     }"
                     class="lowerThirdFullSubtitle"
@@ -44,6 +48,11 @@
 </template>
 
 <style>
+.lowerThirdFullTitleContainer {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
 .lowerThirdFullOuterContainer {
     width: 100vw;
     background: rgba(83, 83, 83, 0.5);
@@ -72,6 +81,9 @@
     white-space: nowrap;
     text-align: center;
     width: 100%;
+    top: 0;
+    left: 0;
+    transition: opacity 0.25s ease-in-out 0s;
 }
 
 .lowerThirdFullSubtitle {
@@ -87,6 +99,7 @@
     text-align: center;
     width: 100%;
     position: relative;
+    transition: opacity 0.25s ease-in-out 0s;
 }
 </style>
 
@@ -100,23 +113,22 @@ import { TextComponent } from "./TextComponent";
     name: "LowerThirdFull",
 })
 export default class LowerThirdFull extends Vue implements TextComponent {
-    private lowerThirdFullText: string = "";
+    private readonly animationDuration = 500;
+
+    private ltState: number = 1;
+
+    private lowerThirdFullTextA: string = "";
+
+    private lowerThirdFullTextB: string = "";
 
     private lowerThirdFullSubtitleA: string = "";
 
     private lowerThirdFullSubtitleB: string = "";
 
-    private hasSubtitle: boolean = false;
-
-    private isActive: boolean = false;
-
     private subtitleState = 1;
 
     get hasSubtitleImmediate(): boolean | undefined {
-        return (
-            this.$store.state.isActive.lowerThirdFullSubtitleA ||
-            this.$store.state.isActive.lowerThirdFullSubtitleB
-        );
+        return this.$store.state.isActive.lowerThirdFullSubtitle;
     }
 
     get isMainActive(): boolean | undefined {
@@ -127,106 +139,117 @@ export default class LowerThirdFull extends Vue implements TextComponent {
         return this.$store.state.textData.lowerThirdFull;
     }
 
-    get ltSubAStore(): string | undefined {
-        return this.$store.state.textData.lowerThirdFullSubtitleA;
-    }
-
-    get ltSubBStore(): string | undefined {
-        return this.$store.state.textData.lowerThirdFullSubtitleB;
-    }
-
-    @Watch("hasSubtitleImmediate")
-    hasSubtitleChanged(newHasSubtitle: boolean | undefined) {
-        if (this.isMainActive) {
-            this.hasSubtitle = newHasSubtitle;
-            this.isActive = true;
-        } else {
-            setTimeout(() => {
-                this.hasSubtitle = newHasSubtitle;
-            }, 500);
-        }
+    get ltSubStore(): string | undefined {
+        return this.$store.state.textData.lowerThirdFullSubtitle;
     }
 
     @Watch("ltTextStore")
     ltTextChaned(newText: string | undefined) {
         if (this.isMainActive) {
-            this.lowerThirdFullText = newText ?? "";
-            this.isActive = true;
+            this.changeActivation(true);
+            if (this.ltState === 1) {
+                this.lowerThirdFullTextB = newText ?? "";
+                this.ltState = 2;
+                setTimeout(() => {
+                    this.lowerThirdFullTextA = "";
+                }, this.animationDuration);
+            } else if (this.ltState === 2) {
+                this.lowerThirdFullTextA = newText ?? "";
+                this.ltState = 1;
+                setTimeout(() => {
+                    this.lowerThirdFullTextB = "";
+                }, this.animationDuration);
+            }
         } else {
-            this.isActive = false;
+            this.changeActivation(false);
             setTimeout(() => {
-                this.lowerThirdFullText = newText ?? "";
-            }, 500);
+                if (this.ltState === 1) {
+                    this.lowerThirdFullTextB = newText ?? "";
+                    this.ltState = 2;
+                    this.lowerThirdFullTextA = "";
+                } else if (this.ltState === 2) {
+                    this.lowerThirdFullTextA = newText ?? "";
+                    this.ltState = 1;
+                    this.lowerThirdFullTextB = "";
+                }
+            }, this.animationDuration);
         }
     }
 
-    @Watch("ltSubAStore")
-    ltSubAChaned(newText: string | undefined) {
-        this.subtitleState = 1;
-        if (
-            (newText && this.$store.state.isActive.lowerThirdFullSubtitleA) ||
-            this.isMainActive
-        ) {
-            this.isActive = true;
-            this.lowerThirdFullSubtitleA = newText ?? "";
-        } else {
-            setTimeout(() => {
-                this.lowerThirdFullSubtitleA = newText ?? "";
-            }, 550);
-        }
-    }
-
-    @Watch("ltSubBStore")
-    ltSubBChaned(newText: string | undefined) {
-        this.subtitleState = 2;
-        if (
-            (newText && this.$store.state.isActive.lowerThirdFullSubtitleB) ||
-            this.isMainActive
-        ) {
-            this.isActive = true;
-            this.lowerThirdFullSubtitleB = newText ?? "";
-        } else {
-            setTimeout(() => {
+    @Watch("ltSubStore")
+    ltSubChaned(newText: string | undefined) {
+        if (this.hasSubtitleImmediate) {
+            this.changeActivation(true);
+            if (this.subtitleState === 1) {
                 this.lowerThirdFullSubtitleB = newText ?? "";
-            }, 550);
+                this.subtitleState = 2;
+                setTimeout(() => {
+                    this.lowerThirdFullSubtitleA = "";
+                }, this.animationDuration);
+            } else if (this.subtitleState === 2) {
+                this.lowerThirdFullSubtitleA = newText ?? "";
+                this.subtitleState = 1;
+                setTimeout(() => {
+                    this.lowerThirdFullSubtitleB = "";
+                }, this.animationDuration);
+            }
+        } else {
+            if (!this.isMainActive) {
+                this.changeActivation(false);
+            }
+            setTimeout(() => {
+                if (this.subtitleState === 1) {
+                    this.lowerThirdFullSubtitleB = newText ?? "";
+                    this.subtitleState = 2;
+                    this.lowerThirdFullSubtitleA = "";
+                } else if (this.subtitleState === 2) {
+                    this.lowerThirdFullSubtitleA = newText ?? "";
+                    this.subtitleState = 1;
+                    this.lowerThirdFullSubtitleB = "";
+                }
+            }, this.animationDuration);
+        }
+    }
+
+    @Watch("hasSubtitleImmediate")
+    changeSubtitleVisible(newState: boolean | undefined) {
+        if (newState) {
+            (this.$refs
+                .lowerThirdFullSubtitleContainer as HTMLDivElement).style.visibility =
+                "";
+            (this.$refs
+                .lowerThirdFullSubtitleContainer as HTMLDivElement).style.opacity =
+                "1";
+        } else {
+            (this.$refs
+                .lowerThirdFullSubtitleContainer as HTMLDivElement).style.opacity =
+                "0";
+            setTimeout(() => {
+                (this.$refs
+                    .lowerThirdFullSubtitleContainer as HTMLDivElement).style.visibility =
+                    "collapse";
+            }, this.animationDuration);
         }
     }
 
     @Watch("isMainActive")
-    mainActiveChanged(newActive: boolean) {
-        this.isActive = newActive;
-    }
-
-    @Watch("isActive")
-    activeChanged(newState: boolean | undefined) {
+    changeActivation(newState: boolean | undefined) {
         if (newState) {
             (this.$refs
                 .lowerThirdFullOuterContainer as HTMLDivElement).style.opacity =
                 "1";
             setTimeout(() => {
-                if (this.isActive) {
-                    (this.$refs
-                        .lowerThirdFullContainer as HTMLDivElement).style.opacity =
-                        "1";
-                } else {
-                    (this.$refs
-                        .lowerThirdFullContainer as HTMLDivElement).style.opacity =
-                        "0";
-                }
+                (this.$refs
+                    .lowerThirdFullContainer as HTMLDivElement).style.opacity =
+                    "1";
             }, 300);
         } else {
             (this.$refs
                 .lowerThirdFullContainer as HTMLDivElement).style.opacity = "0";
             setTimeout(() => {
-                if (!this.isActive) {
-                    (this.$refs
-                        .lowerThirdFullOuterContainer as HTMLDivElement).style.opacity =
-                        "0";
-                } else {
-                    (this.$refs
-                        .lowerThirdFullOuterContainer as HTMLDivElement).style.opacity =
-                        "1";
-                }
+                (this.$refs
+                    .lowerThirdFullOuterContainer as HTMLDivElement).style.opacity =
+                    "0";
             }, 300);
         }
     }
@@ -237,11 +260,7 @@ export default class LowerThirdFull extends Vue implements TextComponent {
         | { name: string; description?: string }
         | string
     )[] {
-        return [
-            "lowerThirdFull",
-            "lowerThirdFullSubtitleA",
-            "lowerThirdFullSubtitleB",
-        ];
+        return ["lowerThirdFull", "lowerThirdFullSubtitle"];
     }
 }
 </script>
