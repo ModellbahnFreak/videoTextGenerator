@@ -195,6 +195,27 @@ export default class Edit extends Vue {
                         that.config?.cuelists?.forEach((l) => {
                             that.cuelists.set(l.name, l);
                         });
+                        if (localStorage.getItem("openCuelists")) {
+                            try {
+                                const parsed = JSON.parse(
+                                    localStorage.getItem("openCuelists")
+                                );
+                                if (parsed instanceof Array) {
+                                    console.log("Loading cuelists");
+                                    that.openCuelists.push(
+                                        ...parsed.filter((list) => {
+                                            return (
+                                                that.cuelists.has(list.name) &&
+                                                typeof list.currIndex ===
+                                                    "number" &&
+                                                typeof list.selIndex ===
+                                                    "number"
+                                            );
+                                        })
+                                    );
+                                }
+                            } catch {}
+                        }
                     }
                 }
             }
@@ -229,6 +250,13 @@ export default class Edit extends Vue {
             }
         });
         this.usedKeys = [...this.descriptionForKeys.keys()];
+        window.addEventListener("beforeunload", () => {
+            console.log("Saving cuelists");
+            localStorage.setItem(
+                "openCuelists",
+                JSON.stringify(this.openCuelists)
+            );
+        });
     }
 
     beforeDestroy() {
