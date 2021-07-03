@@ -8,14 +8,19 @@
             <div
                 class="lowerThirdFullSubtitleContainer"
                 :style="{
-                    height: !!hasSubtitle ? undefined : '0',
+                    height: hasSubtitle ? undefined : '0',
+                    visibility: hasSubtitle ? undefined : 'hidden',
                 }"
             >
                 <div
                     v-html="lowerThirdFullSubtitleA"
                     :style="{
                         height: subtitleState == 1 ? undefined : '0',
-                        opacity: subtitleState == 1 ? '1' : '0',
+                        opacity:
+                            subtitleState == 1 &&
+                            $store.state.isActive.lowerThirdFullSubtitleA
+                                ? '1'
+                                : '0',
                         position: subtitleState == 1 ? undefined : 'absolute',
                     }"
                     class="lowerThirdFullSubtitle"
@@ -24,7 +29,11 @@
                     v-html="lowerThirdFullSubtitleB"
                     :style="{
                         height: subtitleState == 2 ? undefined : '0',
-                        opacity: subtitleState == 2 ? '1' : '0',
+                        opacity:
+                            subtitleState == 2 &&
+                            $store.state.isActive.lowerThirdFullSubtitleB
+                                ? '1'
+                                : '0',
                         position: subtitleState == 2 ? undefined : 'absolute',
                     }"
                     class="lowerThirdFullSubtitle"
@@ -97,12 +106,17 @@ export default class LowerThirdFull extends Vue implements TextComponent {
 
     private lowerThirdFullSubtitleB: string = "";
 
+    private hasSubtitle: boolean = false;
+
     private isActive: boolean = false;
 
     private subtitleState = 1;
 
-    get hasSubtitle(): boolean | undefined {
-        return !!this.lowerThirdFullSubtitleA || !!this.lowerThirdFullSubtitleB;
+    get hasSubtitleImmediate(): boolean | undefined {
+        return (
+            this.$store.state.isActive.lowerThirdFullSubtitleA ||
+            this.$store.state.isActive.lowerThirdFullSubtitleB
+        );
     }
 
     get isMainActive(): boolean | undefined {
@@ -121,6 +135,18 @@ export default class LowerThirdFull extends Vue implements TextComponent {
         return this.$store.state.textData.lowerThirdFullSubtitleB;
     }
 
+    @Watch("hasSubtitleImmediate")
+    hasSubtitleChanged(newHasSubtitle: boolean | undefined) {
+        if (this.isMainActive) {
+            this.hasSubtitle = newHasSubtitle;
+            this.isActive = true;
+        } else {
+            setTimeout(() => {
+                this.hasSubtitle = newHasSubtitle;
+            }, 500);
+        }
+    }
+
     @Watch("ltTextStore")
     ltTextChaned(newText: string | undefined) {
         if (this.isMainActive) {
@@ -137,7 +163,10 @@ export default class LowerThirdFull extends Vue implements TextComponent {
     @Watch("ltSubAStore")
     ltSubAChaned(newText: string | undefined) {
         this.subtitleState = 1;
-        if (newText || this.isActive) {
+        if (
+            (newText && this.$store.state.isActive.lowerThirdFullSubtitleA) ||
+            this.isMainActive
+        ) {
             this.isActive = true;
             this.lowerThirdFullSubtitleA = newText ?? "";
         } else {
@@ -150,7 +179,10 @@ export default class LowerThirdFull extends Vue implements TextComponent {
     @Watch("ltSubBStore")
     ltSubBChaned(newText: string | undefined) {
         this.subtitleState = 2;
-        if (newText || this.isActive) {
+        if (
+            (newText && this.$store.state.isActive.lowerThirdFullSubtitleB) ||
+            this.isMainActive
+        ) {
             this.isActive = true;
             this.lowerThirdFullSubtitleB = newText ?? "";
         } else {
