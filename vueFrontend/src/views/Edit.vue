@@ -11,7 +11,14 @@
             </v-row>
             <v-row>
                 <v-col class="pt-0">
-                    <v-text-field label="String key" v-model="manualKey" />
+                    <v-combobox
+                        :items="usedKeys"
+                        label="String key"
+                        :hint="manualKeyDescription"
+                        v-model="manualKey"
+                        persistent-hint
+                    >
+                    </v-combobox>
                 </v-col>
                 <v-col class="pt-0">
                     <v-text-field label="Display Text" v-model="manualValue" />
@@ -139,6 +146,7 @@ import { set } from "node_modules/vue/types/umd";
 import Vue from "vue";
 import { Component } from "vue-property-decorator";
 import { Config, Cue, Cuelist } from "../Config";
+import { allComponents, allComponentsList } from "../components/allComponents";
 
 @Component({
     name: "Edit",
@@ -150,7 +158,13 @@ export default class Edit extends Vue {
     formValid: boolean = false;
     selCuelist: string = "";
     manualKey = "";
+    usedKeys: string[] = [];
+    descriptionForKeys = new Map<string, string>();
     manualValue = "";
+
+    get manualKeyDescription(): string {
+        return this.descriptionForKeys.get(this.manualKey) ?? "";
+    }
 
     sendSubscribe() {
         this.$socket.send({
@@ -163,21 +177,58 @@ export default class Edit extends Vue {
         const that = this;
         this.sendSubscribe();
         this.$socket.on("connect", this.sendSubscribe.bind(this));
-        this.$socket.on("editor", (data: { type: string; config?: Config }) => {
-            if (typeof data == "object" && typeof data.type === "string") {
-                if (data.type == "set") {
-                } else if (
-                    data.type == "config" &&
-                    typeof data.config === "object"
-                ) {
-                    Vue.set(that, "config", data.config);
-                    Vue.set(that, "cuelists", new Map());
-                    that.config?.cuelists?.forEach((l) => {
-                        that.cuelists.set(l.name, l);
-                    });
+        this.$socket.on(
+            "editor",
+            (data: {
+                type: string;
+                config?: Config;
+                keys?: { name: string; description?: string }[];
+            }) => {
+                if (typeof data == "object" && typeof data.type === "string") {
+                    if (data.type == "set") {
+                    } else if (
+                        data.type == "config" &&
+                        typeof data.config === "object"
+                    ) {
+                        Vue.set(that, "config", data.config);
+                        Vue.set(that, "cuelists", new Map());
+                        that.config?.cuelists?.forEach((l) => {
+                            that.cuelists.set(l.name, l);
+                        });
+                    }
                 }
             }
+        );
+        allComponentsList.forEach((c) => {
+            if (typeof c.component.getUsedVariables === "function") {
+                c.component
+                    .getUsedVariables()
+                    .forEach(
+                        (
+                            variable:
+                                | string
+                                | { name: string; description?: string }
+                        ) => {
+                            if (typeof variable === "string") {
+                                if (
+                                    !(
+                                        this.descriptionForKeys.get(variable)
+                                            ?.length ?? 0 > 0
+                                    )
+                                ) {
+                                    this.descriptionForKeys.set(variable, "");
+                                }
+                            } else {
+                                this.descriptionForKeys.set(
+                                    variable.name,
+                                    variable.description ?? ""
+                                );
+                            }
+                        }
+                    );
+            }
         });
+        this.usedKeys = [...this.descriptionForKeys.keys()];
     }
 
     beforeDestroy() {
