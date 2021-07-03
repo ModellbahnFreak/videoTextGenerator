@@ -9,6 +9,12 @@
     </div>
 </template>
 
+<style>
+html {
+    overflow: hidden;
+}
+</style>
+
 <script lang="ts">
 import { TextComponent } from "@/components/TextComponent";
 import Vue from "vue";
@@ -46,10 +52,16 @@ export default class Viewer extends Vue {
                                 this.updateActiveForCue(cueStringKey, cue);
                                 this.updateValueForCue(cueStringKey, cue);
                                 if (this.$refs.textComp instanceof Array) {
+                                    const fullCue: Cue = {
+                                        name: cue.name,
+                                        value: cue.value,
+                                        isActive: cue.isActive ?? !!cue.value,
+                                        stringKey: cueStringKey,
+                                    };
                                     (this.$refs
                                         .textComp as TextComponent[]).forEach(
-                                        (c) => {
-                                            c.setMsg(cue);
+                                        (c: TextComponent) => {
+                                            c.setMsg(fullCue);
                                         }
                                     );
                                 } else {
