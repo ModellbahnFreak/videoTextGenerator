@@ -118,6 +118,13 @@ export default class LowerThird extends Vue implements TextComponent {
         }
     }
 
+    static getUsedVariables(): (
+        | { name: string; description?: string }
+        | string
+    )[] {
+        return ["lowerThird", "lowerThirdSubtitle"];
+    }
+
     setMsg() {}
 }
 </script>

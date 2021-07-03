@@ -88,5 +88,12 @@ export default class Subtitle extends Vue implements TextComponent {
     get subtitleTextB(): string {
         return this.$store.state.textData.subtitleB;
     }
+
+    static getUsedVariables(): (
+        | { name: string; description?: string }
+        | string
+    )[] {
+        return ["subtitle", "subtitleA", "subtitleB"];
+    }
 }
 </script>
