@@ -9,11 +9,7 @@
     </div>
 </template>
 
-<style>
-html {
-    overflow: hidden;
-}
-</style>
+<style></style>
 
 <script lang="ts">
 import { TextComponent } from "@/components/TextComponent";
@@ -38,6 +34,7 @@ export default class Viewer extends Vue {
     }
 
     created() {
+        document.getElementsByTagName("html")[0].style.overflow = "hidden";
         this.sendSubscribe();
         this.$socket.on("connect", this.sendSubscribe.bind(this));
         this.$socket.on(
