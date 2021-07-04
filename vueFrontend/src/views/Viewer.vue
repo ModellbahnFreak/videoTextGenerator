@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div ref="viewerRoot">
         <component
             v-for="comp in componentsList"
             :key="comp.name"
@@ -69,6 +69,12 @@ export default class Viewer extends Vue {
                         });
                     } else if (data.type == "clearAll") {
                         this.$store.commit("clearAll");
+                    } else if (data.type == "blackoutOn") {
+                        (this.$refs
+                            .viewerRoot as HTMLDivElement).style.opacity = "0";
+                    } else if (data.type == "blackoutOff") {
+                        (this.$refs
+                            .viewerRoot as HTMLDivElement).style.opacity = "";
                     }
                 }
             }
