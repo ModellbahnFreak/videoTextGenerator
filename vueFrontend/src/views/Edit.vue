@@ -195,11 +195,12 @@ export default class Edit extends Vue {
                         that.config?.cuelists?.forEach((l) => {
                             that.cuelists.set(l.name, l);
                         });
-                        if (localStorage.getItem("openCuelists")) {
+                        const storedLists = localStorage.getItem(
+                            "openCuelists"
+                        );
+                        if (storedLists) {
                             try {
-                                const parsed = JSON.parse(
-                                    localStorage.getItem("openCuelists")
-                                );
+                                const parsed = JSON.parse(storedLists);
                                 if (parsed instanceof Array) {
                                     console.log("Loading cuelists");
                                     that.openCuelists.push(
