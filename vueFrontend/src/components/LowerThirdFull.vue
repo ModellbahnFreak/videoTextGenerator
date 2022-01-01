@@ -3,7 +3,13 @@
         class="lowerThirdFullOuterContainer"
         ref="lowerThirdFullOuterContainer"
     >
-        <v-row class="lowerThirdFullContainer" ref="lowerThirdFullContainer">
+        <v-row
+            class="lowerThirdFullContainer"
+            ref="lowerThirdFullContainer"
+            :style="{
+                'padding-left': isImageActive ? '13vw' : undefined,
+            }"
+        >
             <div class="lowerThirdFullTitleContainer">
                 <div
                     v-html="lowerThirdFullTextA"
@@ -42,6 +48,32 @@
                     }"
                     class="lowerThirdFullSubtitle"
                 ></div>
+            </div>
+            <div
+                class="lowerThirdFullImageContainer"
+                ref="lowerThirdFullImageContainer"
+                :style="{
+                    opacity: isImageActive ? '1' : '0',
+                }"
+            >
+                <v-img
+                    :src="lowerThirdFullImageA"
+                    contain
+                    :style="{
+                        opacity: imageState == 1 ? '1' : '0',
+                        position: imageState == 1 ? undefined : 'absolute',
+                    }"
+                    class="lowerThirdFullImage"
+                ></v-img>
+                <v-img
+                    :src="lowerThirdFullImageB"
+                    contain
+                    :style="{
+                        opacity: imageState == 2 ? '1' : '0',
+                        position: imageState == 2 ? undefined : 'absolute',
+                    }"
+                    class="lowerThirdFullImage"
+                ></v-img>
             </div>
         </v-row>
     </div>
@@ -101,6 +133,22 @@
     position: relative;
     transition: opacity 0.25s ease-in-out 0s;
 }
+
+.lowerThirdFullImage {
+    width: 100%;
+    top: 0;
+    left: 0;
+    transition: opacity 0.25s ease-in-out 0s;
+    max-height: 100%;
+}
+.lowerThirdFullImageContainer {
+    width: 10vw;
+    position: absolute;
+    left: 2vw;
+    top: 3vw;
+    bottom: 3vh;
+    transition: opacity 0.25s ease-in-out 0s;
+}
 </style>
 
 <script lang="ts">
@@ -125,7 +173,13 @@ export default class LowerThirdFull extends Vue implements TextComponent {
 
     private lowerThirdFullSubtitleB: string = "";
 
+    private lowerThirdFullImageA: string = "";
+
+    private lowerThirdFullImageB: string = "";
+
     private subtitleState = 1;
+
+    private imageState = 1;
 
     get hasSubtitleImmediate(): boolean | undefined {
         return this.$store.state.isActive.lowerThirdFullSubtitle;
@@ -141,6 +195,14 @@ export default class LowerThirdFull extends Vue implements TextComponent {
 
     get ltSubStore(): string | undefined {
         return this.$store.state.textData.lowerThirdFullSubtitle;
+    }
+
+    get ltImageStore(): string | undefined {
+        return this.$store.state.textData.lowerThirdFullImage;
+    }
+
+    get isImageActive(): boolean | undefined {
+        return this.$store.state.isActive.lowerThirdFullImage;
     }
 
     @Watch("ltTextStore")
@@ -211,6 +273,21 @@ export default class LowerThirdFull extends Vue implements TextComponent {
         }
     }
 
+    @Watch("ltImageStore")
+    ltImageChanged(newPath: string | undefined) {
+        setTimeout(() => {
+            if (this.imageState === 1) {
+                this.lowerThirdFullImageB = "/images/" + newPath ?? "";
+                this.imageState = 2;
+                this.lowerThirdFullImageA = "";
+            } else if (this.imageState === 2) {
+                this.lowerThirdFullImageA = "/images/" + newPath ?? "";
+                this.imageState = 1;
+                this.lowerThirdFullImageB = "";
+            }
+        }, this.animationDuration);
+    }
+
     @Watch("hasSubtitleImmediate")
     changeSubtitleVisible(newState: boolean | undefined) {
         if (newState) {
@@ -260,7 +337,11 @@ export default class LowerThirdFull extends Vue implements TextComponent {
         | { name: string; description?: string }
         | string
     )[] {
-        return ["lowerThirdFull", "lowerThirdFullSubtitle"];
+        return [
+            "lowerThirdFull",
+            "lowerThirdFullSubtitle",
+            "lowerThirdFullImage",
+        ];
     }
 }
 </script>
