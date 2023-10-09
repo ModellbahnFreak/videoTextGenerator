@@ -1,3 +1,4 @@
+
 import express from "express";
 import * as http from "http";
 import io from "socket.io";
@@ -6,6 +7,9 @@ import cors from "cors";
 import * as path from "path";
 import { Config } from "./configLoading/Config";
 import { configMerger } from "./configLoading/configMerger";
+import { ZMQInputPlugin } from "./plugins/zmq_input_plugin";
+
+const ENABLED_PLUGINS = [new ZMQInputPlugin()];
 
 const app = express();
 const server = http.createServer(app);
@@ -134,3 +138,8 @@ socketServer.on("connection", (socket) => {
 server.listen(8081, () => {
     console.log("Server running");
 });
+
+for (const plugin of ENABLED_PLUGINS) {
+    plugin.init();
+    plugin.onSendMessage = editorMsgReceived;
+}
