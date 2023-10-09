@@ -3,6 +3,7 @@ out
 !**/config/[A-Za-z]*.schema.json
 subtitleGenerator/*.txt
 subtitleGenerator/*.json
+.vscode/**
 
 # Logs
 logs

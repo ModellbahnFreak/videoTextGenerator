@@ -5,6 +5,17 @@
     ],
     "type": "object",
     "properties": {
+        "plugins": {
+            "type": "object",
+            "properties": {
+                "blacklist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "cuelists": {
             "type": "array",
             "items": {

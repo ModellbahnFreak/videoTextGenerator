@@ -1,5 +1,6 @@
 export interface Config {
     cuelists: Cuelist[];
+    plugins: { blacklist: string[] }
 }
 
 export interface Cuelist {
