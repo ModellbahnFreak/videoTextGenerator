@@ -3,8 +3,8 @@
         <v-row class="lowerThirdContainer" ref="lowerThirdContainer" :style="{
             height: !!lowerThirdSubtitle ? '12.5vh' : '9vh',
         }">
-            <v-col style="flex-grow: 0; flex-shrink:0;height:8.5vh;" class="pa-0">
-                <img :src="logoUrl" style="height: 100%;" :style="{ 'display': isLogoActive ? undefined : 'none' }" />
+            <v-col style="flex-grow: 0; flex-shrink:0;height:100%;" class="pa-0 mr-3 d-flex align-center">
+                <img :src="logoUrl" style="height: 8.5vh;" :style="{ 'display': isLogoActive ? undefined : 'none' }" />
             </v-col>
             <v-col class="pa-0">
                 <div v-html="lowerThirdText" class="lowerThirdText"></div>
