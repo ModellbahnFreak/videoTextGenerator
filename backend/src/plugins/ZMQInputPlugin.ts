@@ -1,4 +1,4 @@
-import { Plugin } from "./Plugin";
+import { Plugin } from "./plugin";
 import * as zmq from "zeromq";
 
 export interface ZMQConfig {

@@ -7,7 +7,7 @@ import cors from "cors";
 import * as path from "path";
 import { Config } from "./configLoading/Config";
 import { configMerger } from "./configLoading/configMerger";
-import { loadAllPlugins, Plugin } from "./plugins/Plugin";
+import { loadAllPlugins, Plugin } from "./plugins/plugin";
 
 async function main() {
 
