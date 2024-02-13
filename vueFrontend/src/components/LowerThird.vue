@@ -58,6 +58,8 @@ import Vue from "vue";
 import { Component, Watch } from "vue-property-decorator";
 import { TextComponent } from "./TextComponent";
 
+const LOWER_THIRD_WIDTH = "84vw";
+
 @Component({
     name: "LowerThird",
 })
@@ -87,7 +89,7 @@ export default class LowerThird extends Vue implements TextComponent {
         if (newState) {
             (this.$refs
                 .lowerThirdOuterContainer as HTMLDivElement).style.width =
-                "84vw";
+                LOWER_THIRD_WIDTH;
             setTimeout(() => {
                 if (this.isActive) {
                     (this.$refs
@@ -110,7 +112,7 @@ export default class LowerThird extends Vue implements TextComponent {
                 } else {
                     (this.$refs
                         .lowerThirdOuterContainer as HTMLDivElement).style.width =
-                        "84vw";
+                        LOWER_THIRD_WIDTH;
                 }
             }, 200);
         }
