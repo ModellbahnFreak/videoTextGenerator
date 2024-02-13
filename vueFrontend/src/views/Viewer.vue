@@ -1,11 +1,6 @@
 <template>
     <div ref="viewerRoot">
-        <component
-            v-for="comp in componentsList"
-            :key="comp.name"
-            :is="comp.component"
-            ref="textComp"
-        ></component>
+        <component v-for="comp in componentsList" :key="comp.name" :is="comp.component" ref="textComp"></component>
     </div>
 </template>
 
@@ -57,10 +52,10 @@ export default class Viewer extends Vue {
                                     };
                                     (this.$refs
                                         .textComp as TextComponent[]).forEach(
-                                        (c: TextComponent) => {
-                                            c.setMsg(fullCue);
-                                        }
-                                    );
+                                            (c: TextComponent) => {
+                                                c.setMsg(fullCue);
+                                            }
+                                        );
                                 } else {
                                     (this.$refs
                                         .textComp as TextComponent).setMsg(cue);
@@ -79,6 +74,13 @@ export default class Viewer extends Vue {
                 }
             }
         );
+    }
+
+    mounted() {
+        const app = document.getElementById("app");
+        if (app) {
+            app.style.background = "inherit";
+        }
     }
 
     beforeDestroy() {

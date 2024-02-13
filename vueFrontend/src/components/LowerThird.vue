@@ -1,24 +1,14 @@
 <template>
     <div class="lowerThirdOuterContainer" ref="lowerThirdOuterContainer">
-        <v-row
-            class="lowerThirdContainer"
-            ref="lowerThirdContainer"
-            :style="{
-                height: !!lowerThirdSubtitle ? '12.5vh' : '9vh',
-            }"
-        >
-            <v-col
-                style="flex-grow: 0; flex-shrink:0;height:8.5vh;"
-                class="pa-0"
-            >
-                <img src="logo.png" style="height: 100%;" />
+        <v-row class="lowerThirdContainer" ref="lowerThirdContainer" :style="{
+            height: !!lowerThirdSubtitle ? '12.5vh' : '9vh',
+        }">
+            <v-col style="flex-grow: 0; flex-shrink:0;height:8.5vh;" class="pa-0">
+                <img :src="logoUrl" style="height: 100%;" :style="{ 'display': isLogoActive ? undefined : 'none' }" />
             </v-col>
             <v-col class="pa-0">
                 <div v-html="lowerThirdText" class="lowerThirdText"></div>
-                <div
-                    v-html="lowerThirdSubtitle"
-                    class="lowerThirdSubtitle"
-                ></div>
+                <div v-html="lowerThirdSubtitle" class="lowerThirdSubtitle"></div>
             </v-col>
         </v-row>
     </div>
@@ -84,6 +74,14 @@ export default class LowerThird extends Vue implements TextComponent {
         return this.$store.state.isActive.lowerThird;
     }
 
+    get isLogoActive(): boolean | undefined {
+        return this.$store.state.isActive.lowerThirdLogo ?? true;
+    }
+
+    get logoUrl(): boolean | undefined {
+        return this.$store.state.textData.lowerThirdLogo ?? "logo.png";
+    }
+
     @Watch("isActive")
     activeChanged(newState: boolean | undefined) {
         if (newState) {
@@ -122,9 +120,9 @@ export default class LowerThird extends Vue implements TextComponent {
         | { name: string; description?: string }
         | string
     )[] {
-        return ["lowerThird", "lowerThirdSubtitle"];
+        return ["lowerThird", "lowerThirdSubtitle", "lowerThirdLogo"];
     }
 
-    setMsg() {}
+    setMsg() { }
 }
 </script>
