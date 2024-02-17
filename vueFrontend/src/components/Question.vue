@@ -18,7 +18,7 @@
     height: 0;
     /*background: rgba(83, 83, 83, 0.5);*/
     background: #dee1db;
-    color: white;
+    color: black;
     font-size: 4vh;
     line-height: 1em;
     position: absolute;
