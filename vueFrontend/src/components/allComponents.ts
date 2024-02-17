@@ -4,12 +4,14 @@ import Subtitle from "./Subtitle.vue";
 import Credits from "./Credits.vue";
 import { TextComponent } from "./TextComponent";
 import Timer from "./Timer.vue";
+import Question from "./Question.vue";
 
 export const allComponents = {
     LowerThird,
     LowerThirdFull,
     Subtitle,
     Timer,
+    Question
 };
 
 export const allComponentsList: { name: string; component: any }[] = [
@@ -32,5 +34,9 @@ export const allComponentsList: { name: string; component: any }[] = [
     {
         name: "Credits",
         component: Credits,
+    },
+    {
+        name: "Question",
+        component: Question,
     },
 ];
