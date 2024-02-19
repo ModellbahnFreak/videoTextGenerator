@@ -1,3 +1,5 @@
+*.patch
+
 out
 **/config/*
 !**/config/[A-Za-z]*.schema.json
