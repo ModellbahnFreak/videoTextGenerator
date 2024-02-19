@@ -8,6 +8,7 @@ import * as path from "path";
 import { Config } from "./configLoading/Config";
 import { configMerger } from "./configLoading/configMerger";
 import { loadAllPlugins, Plugin } from "./plugins/plugin";
+import * as fs from "fs/promises";
 
 async function main() {
 
@@ -24,17 +25,18 @@ async function main() {
     const viewers: Set<io.Socket> = new Set();
     const editors: Set<io.Socket> = new Set();
 
+    let filePathBase = path.join(__dirname, "..", "..", "vueFrontend", "dist");
+    if (!(await fs.access(filePathBase).then(() => true).catch(() => false))) {
+        filePathBase = path.join(__dirname, "..", "dist");
+    }
+
     app.use(cors());
 
     app.get("/", (req, res) => {
         res.sendFile(
             path.normalize(
                 path.join(
-                    __dirname,
-                    "..",
-                    "..",
-                    "vueFrontend",
-                    "dist",
+                    filePathBase,
                     "index.html"
                 )
             )
@@ -43,10 +45,14 @@ async function main() {
     app.use(
         "/",
         express.static(
-            path.normalize(path.join(__dirname, "..", "..", "vueFrontend", "dist"))
+            path.normalize(filePathBase)
         )
     );
     app.use("*", (req, res) => {
+        let filePath = path.join(
+            filePathBase,
+            "index.html"
+        );
         res.sendFile(
             path.normalize(
                 path.join(
