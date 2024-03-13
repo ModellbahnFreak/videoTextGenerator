@@ -27,6 +27,7 @@ async function main() {
 
     let filePathBase = path.join(__dirname, "..", "..", "vueFrontend", "dist");
     if (!(await fs.access(filePathBase).then(() => true).catch(() => false))) {
+        console.log("Using dist in backend folder");
         filePathBase = path.join(__dirname, "..", "dist");
     }
 
@@ -56,11 +57,7 @@ async function main() {
         res.sendFile(
             path.normalize(
                 path.join(
-                    __dirname,
-                    "..",
-                    "..",
-                    "vueFrontend",
-                    "dist",
+                    filePathBase,
                     "index.html"
                 )
             )
