@@ -9,7 +9,7 @@
                     >
                 </v-col>
             </v-row>
-            <v-row>
+            <v-row v-on:keypress="manualKeyPress">
                 <v-col class="pt-0">
                     <v-combobox
                         :items="usedKeys"
@@ -334,6 +334,13 @@ export default class Edit extends Vue {
             cue: [cue],
             stringKey: this.manualKey,
         });
+    }
+
+    manualKeyPress(e: KeyboardEvent) {
+        console.log(e);
+        if (e.key == "Enter") {
+            this.setManual();
+        }
     }
 
     get existingCuelistNames(): string[] {
