@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { useClientStore } from '@/vuePlugins/stores/client';
+
+const clientStore = useClientStore();
+</script>
+
 <template>
     <v-dialog max-width="500" transition="fade-transition">
         <template v-slot:activator="{ props: activatorProps }">
@@ -8,7 +14,11 @@
         <template v-slot:default="{ isActive }">
             <v-card title="Options">
                 <v-card-text>
-                    Hier sollten Optionen stehen
+                    Visible graphics
+                    <v-switch v-for="(pluginData, i) in clientStore.graphics" :key="i"
+                        :model-value="pluginData.isOpened" :label="pluginData.data?.title ?? pluginData.path"
+                        :hide-details="true"
+                        @update:modelValue="(state) => clientStore.graphicsSetOpened(i, state)"></v-switch>
                 </v-card-text>
             </v-card>
         </template>
