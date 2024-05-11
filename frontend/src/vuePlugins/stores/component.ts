@@ -1,28 +1,31 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { PluginData } from '@videotextgenerator/api';
 
+export interface ComponentMetadata {
+    indexInPlugin: number;
+    isOpened: boolean;
+    pluginUuid: string;
+    title: string
+}
+
+/**
+ * Store that handles loading of vue components as well as managing the state (visible/order etc.) for each client
+ */
 export const useComponentStore = defineStore('client', () => {
-    const editors = ref<{ path: string, isOpened: boolean, data?: PluginData }[]>([]);
+    const editors = ref<ComponentMetadata[]>([]);
 
-    const graphics = ref<{ indexInPlugin: number, isOpened: boolean, pluginUuid: string, title: string }[]>([]);
+    const graphics = ref<ComponentMetadata[]>([]);
 
-    function editorAdd(path: string) {
-        if (editors.value.filter(e => e.path == path).length > 0) {
+    function editorAdd(pluginUuid: string, indexInPlugin: number, title: string) {
+        if (editors.value.filter(c => c.pluginUuid == pluginUuid && c.indexInPlugin == indexInPlugin).length > 0) {
             return;
         }
-        editors.value.push({ path, isOpened: false, data: {} });
+        editors.value.push({ indexInPlugin, isOpened: true, pluginUuid, title });
     }
     function editorSetOpened(i: number, isOpened: boolean) {
         const editor = editors.value[i];
         if (editor) {
             editor.isOpened = isOpened;
-        }
-    }
-    function editorSetData(i: number, data: PluginData) {
-        const editor = editors.value[i];
-        if (editor) {
-            editor.data = data;
         }
     }
 
@@ -39,5 +42,5 @@ export const useComponentStore = defineStore('client', () => {
         }
     }
 
-    return { editors, graphics, editorAdd, editorSetData, editorSetOpened, graphicsAdd, graphicsSetOpened }
+    return { editors, graphics, editorAdd, editorSetOpened, graphicsAdd, graphicsSetOpened }
 })

@@ -19,7 +19,7 @@ const pluginStore = usePluginStore();
                     Visible graphics
                     <v-switch v-for="(pluginData, i) in componentStore.graphics" :key="i"
                         :model-value="pluginData.isOpened"
-                        :label="pluginData.title ?? (pluginData.pluginUuid + '/' + pluginData.indexInPlugin)"
+                        :label="pluginData.title ?? (pluginData.pluginUuid + '/g' + pluginData.indexInPlugin)"
                         :hide-details="true"
                         @update:modelValue="(state) => componentStore.graphicsSetOpened(i, state ?? false)"></v-switch>
                 </v-card-text>

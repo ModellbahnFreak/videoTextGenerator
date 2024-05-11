@@ -3,18 +3,10 @@ import { defineAsyncComponent, ref, type AsyncComponentLoader } from 'vue';
 import GraphicOptions from "./GraphicOptions.vue"
 import { useComponentStore } from '@/vuePlugins/stores/component';
 import { usePluginStore } from '@/vuePlugins/stores/plugin';
+import { loadAllGraphicsComponents } from "@/PluginManager";
 
-const pluginStore = usePluginStore();
 const componentStore = useComponentStore();
-
-const components = Object.fromEntries(Object.entries(pluginStore.pluginsByUuid).map(p =>
-    [p[0], p[1].plugin.getGraphicComponents().map((component, i) => {
-        componentStore.graphicsAdd(p[0], i, component.title);
-        return typeof component.component == "function"
-            ? defineAsyncComponent(component.component as AsyncComponentLoader)
-            : defineAsyncComponent((() => Promise.resolve(component.component)) as AsyncComponentLoader)
-    })]
-));
+const components = loadAllGraphicsComponents();
 
 </script>
 

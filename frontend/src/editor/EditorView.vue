@@ -3,15 +3,11 @@ import { ref } from 'vue';
 import { defineAsyncComponent, type AsyncComponentLoader } from 'vue';
 import type { PluginData } from "@videotextgenerator/api";
 import { computed } from 'vue';
-import { useComponentStore } from "@/vuePlugins/stores/component"
-
-const plugins = Object.fromEntries(Object.entries({
-    ...import.meta.glob("@/componentsEditor/*.vue"),
-    ...import.meta.glob("@plugins/*/frontend/editor/*.vue"),
-}).map(plugin => [plugin[0], defineAsyncComponent(plugin[1] as AsyncComponentLoader)]));
+import { useComponentStore, type ComponentMetadata } from "@/vuePlugins/stores/component"
+import { loadAllEditorComponents } from '@/PluginManager';
 
 const componentStore = useComponentStore();
-Object.keys(plugins).forEach(componentStore.editorAdd);
+const components = loadAllEditorComponents();
 
 let panelToOpen = ref(-1);
 
@@ -24,8 +20,12 @@ function openSlectedPlugin() {
     panelToOpen.value = -1;
 }
 
+function getComponentName(componentData: ComponentMetadata) {
+    return componentData.title ?? (componentData.pluginUuid + "/e" + componentData.indexInPlugin)
+}
+
 const editorUnopenedAsItems = computed(() => {
-    return componentStore.editors.filter(p => !p.isOpened).map((p, i) => ({ value: i, title: p.data?.title ?? p.path })).concat([{ value: -1, title: "--All--" }]);
+    return componentStore.editors.filter(c => !c.isOpened).map((c, i) => ({ value: i, title: getComponentName(c) })).concat([{ value: -1, title: "--All--" }]);
 });
 
 </script>
@@ -44,11 +44,10 @@ const editorUnopenedAsItems = computed(() => {
                 </v-col>
             </v-row>
             <v-divider class="my-2"></v-divider>
-            <v-card v-for="(pluginData, i) in componentStore.editors" :key="pluginData.path"
-                v-show="pluginData.isOpened">
+            <v-card v-for="(componentData, i) in componentStore.editors" :key="i" v-show="componentData.isOpened">
                 <v-card-title class="d-flex">
                     <div class="flex-0-0">
-                        {{ pluginData.data?.title ?? "" }}
+                        {{ getComponentName(componentData) }}
                     </div>
                     <v-spacer />
                     <div class="flex-0-0">
@@ -56,8 +55,7 @@ const editorUnopenedAsItems = computed(() => {
                             @click="() => componentStore.editorSetOpened(i, false)"></v-btn>
                     </div>
                 </v-card-title>
-                <component :is="plugins[pluginData.path]"
-                    @plugindata="(d: PluginData) => componentStore.editorSetData(i, d)">
+                <component :is="components[componentData.pluginUuid][componentData.indexInPlugin]">
                 </component>
             </v-card>
         </v-main>
