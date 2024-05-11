@@ -1,22 +1,28 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, type AsyncComponentLoader } from 'vue';
 import GraphicOptions from "./GraphicOptions.vue"
-import { useClientStore } from '@/vuePlugins/stores/client';
+import { useComponentStore } from '@/vuePlugins/stores/component';
+import { usePluginStore } from '@/vuePlugins/stores/plugin';
 
-const plugins = Object.fromEntries(Object.entries({
-    ...import.meta.glob("@/componentsGraphic/*.vue"),
-    ...import.meta.glob("@plugins/*/frontend/graphic/*.vue"),
-}).map(plugin => [plugin[0], defineAsyncComponent(plugin[1] as AsyncComponentLoader)]));
+const pluginStore = usePluginStore();
+const componentStore = useComponentStore();
 
-const clientStore = useClientStore();
-Object.keys(plugins).forEach(clientStore.graphicsAdd);
+const components = Object.fromEntries(Object.entries(pluginStore.pluginsByUuid).map(p =>
+    [p[0], p[1].plugin.getGraphicComponents().map((component, i) => {
+        componentStore.graphicsAdd(p[0], i, component.title);
+        return typeof component.component == "function"
+            ? defineAsyncComponent(component.component as AsyncComponentLoader)
+            : defineAsyncComponent((() => Promise.resolve(component.component)) as AsyncComponentLoader)
+    })]
+));
 
 </script>
 
 <template>
     <v-app theme="light">
-        <div class="graphicContainer" v-for="(pluginData, i) in clientStore.graphics.filter(p => p.isOpened)" :key="i">
-            <component :is="plugins[pluginData.path]"></component>
+        <div class="graphicContainer" v-for="(pluginData, i) in componentStore.graphics.filter(p => p.isOpened)"
+            :key="i">
+            <component :is="components[pluginData.pluginUuid][pluginData.indexInPlugin]"></component>
         </div>
         <GraphicOptions />
     </v-app>
@@ -37,3 +43,4 @@ html {
     padding: 0 0 0 0;
 }
 </style>
+@/vuePlugins/stores/component

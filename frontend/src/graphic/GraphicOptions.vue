@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { useClientStore } from '@/vuePlugins/stores/client';
+import { useComponentStore } from '@/vuePlugins/stores/component';
+import { usePluginStore } from '@/vuePlugins/stores/plugin';
 
-const clientStore = useClientStore();
+const componentStore = useComponentStore();
+const pluginStore = usePluginStore();
 </script>
 
 <template>
@@ -15,10 +17,11 @@ const clientStore = useClientStore();
             <v-card title="Options">
                 <v-card-text>
                     Visible graphics
-                    <v-switch v-for="(pluginData, i) in clientStore.graphics" :key="i"
-                        :model-value="pluginData.isOpened" :label="pluginData.data?.title ?? pluginData.path"
+                    <v-switch v-for="(pluginData, i) in componentStore.graphics" :key="i"
+                        :model-value="pluginData.isOpened"
+                        :label="pluginData.title ?? (pluginData.pluginUuid + '/' + pluginData.indexInPlugin)"
                         :hide-details="true"
-                        @update:modelValue="(state) => clientStore.graphicsSetOpened(i, state)"></v-switch>
+                        @update:modelValue="(state) => componentStore.graphicsSetOpened(i, state ?? false)"></v-switch>
                 </v-card-text>
             </v-card>
         </template>

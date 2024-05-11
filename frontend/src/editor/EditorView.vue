@@ -3,29 +3,29 @@ import { ref } from 'vue';
 import { defineAsyncComponent, type AsyncComponentLoader } from 'vue';
 import type { PluginData } from "@videotextgenerator/api";
 import { computed } from 'vue';
-import { useClientStore } from "@/vuePlugins/stores/client"
+import { useComponentStore } from "@/vuePlugins/stores/component"
 
 const plugins = Object.fromEntries(Object.entries({
     ...import.meta.glob("@/componentsEditor/*.vue"),
     ...import.meta.glob("@plugins/*/frontend/editor/*.vue"),
 }).map(plugin => [plugin[0], defineAsyncComponent(plugin[1] as AsyncComponentLoader)]));
 
-const clientStore = useClientStore();
-Object.keys(plugins).forEach(clientStore.editorAdd);
+const componentStore = useComponentStore();
+Object.keys(plugins).forEach(componentStore.editorAdd);
 
 let panelToOpen = ref(-1);
 
 function openSlectedPlugin() {
     if (panelToOpen.value == -1) {
-        clientStore.editors.forEach((_, i) => clientStore.editorSetOpened(i, true));
+        componentStore.editors.forEach((_, i) => componentStore.editorSetOpened(i, true));
         return;
     }
-    clientStore.editorSetOpened(panelToOpen.value, true);
+    componentStore.editorSetOpened(panelToOpen.value, true);
     panelToOpen.value = -1;
 }
 
 const editorUnopenedAsItems = computed(() => {
-    return clientStore.editors.filter(p => !p.isOpened).map((p, i) => ({ value: i, title: p.data?.title ?? p.path })).concat([{ value: -1, title: "--All--" }]);
+    return componentStore.editors.filter(p => !p.isOpened).map((p, i) => ({ value: i, title: p.data?.title ?? p.path })).concat([{ value: -1, title: "--All--" }]);
 });
 
 </script>
@@ -44,7 +44,8 @@ const editorUnopenedAsItems = computed(() => {
                 </v-col>
             </v-row>
             <v-divider class="my-2"></v-divider>
-            <v-card v-for="(pluginData, i) in clientStore.editors" :key="pluginData.path" v-show="pluginData.isOpened">
+            <v-card v-for="(pluginData, i) in componentStore.editors" :key="pluginData.path"
+                v-show="pluginData.isOpened">
                 <v-card-title class="d-flex">
                     <div class="flex-0-0">
                         {{ pluginData.data?.title ?? "" }}
@@ -52,11 +53,11 @@ const editorUnopenedAsItems = computed(() => {
                     <v-spacer />
                     <div class="flex-0-0">
                         <v-btn icon="mdi-close" variant="text" size="small" color="error"
-                            @click="() => clientStore.editorSetOpened(i, false)"></v-btn>
+                            @click="() => componentStore.editorSetOpened(i, false)"></v-btn>
                     </div>
                 </v-card-title>
                 <component :is="plugins[pluginData.path]"
-                    @plugindata="(d: PluginData) => clientStore.editorSetData(i, d)">
+                    @plugindata="(d: PluginData) => componentStore.editorSetData(i, d)">
                 </component>
             </v-card>
         </v-main>
@@ -64,3 +65,4 @@ const editorUnopenedAsItems = computed(() => {
 </template>
 
 <style></style>
+@/vuePlugins/stores/component

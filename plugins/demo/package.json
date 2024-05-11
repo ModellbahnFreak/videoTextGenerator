@@ -1,0 +1,18 @@
+{
+  "name": "@videotextgenerator/demo",
+  "version": "1.0.0",
+  "description": "Demo plugin for the videotext generator",
+  "main": "./out/index.js",
+  "exports": {
+    ".": "./out/index.js",
+    "./frontend": "./frontend/index.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ModellbahnFreak",
+  "license": "MIT",
+  "dependencies": {
+    "@videotextgenerator/api": "file:../../api"
+  }
+}

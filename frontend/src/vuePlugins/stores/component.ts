@@ -2,10 +2,10 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { PluginData } from '@videotextgenerator/api';
 
-export const useClientStore = defineStore('client', () => {
+export const useComponentStore = defineStore('client', () => {
     const editors = ref<{ path: string, isOpened: boolean, data?: PluginData }[]>([]);
 
-    const graphics = ref<{ path: string, isOpened: boolean, data?: PluginData }[]>([]);
+    const graphics = ref<{ indexInPlugin: number, isOpened: boolean, pluginUuid: string, title: string }[]>([]);
 
     function editorAdd(path: string) {
         if (editors.value.filter(e => e.path == path).length > 0) {
@@ -26,11 +26,11 @@ export const useClientStore = defineStore('client', () => {
         }
     }
 
-    function graphicsAdd(path: string) {
-        if (graphics.value.filter(p => p.path == path).length > 0) {
+    function graphicsAdd(pluginUuid: string, indexInPlugin: number, title: string) {
+        if (graphics.value.filter(c => c.pluginUuid == pluginUuid && c.indexInPlugin == indexInPlugin).length > 0) {
             return;
         }
-        graphics.value.push({ path, isOpened: true, data: {} });
+        graphics.value.push({ indexInPlugin, isOpened: true, pluginUuid, title });
     }
     function graphicsSetOpened(i: number, isOpened: boolean) {
         const graphic = graphics.value[i];
@@ -38,12 +38,6 @@ export const useClientStore = defineStore('client', () => {
             graphic.isOpened = isOpened;
         }
     }
-    function graphicsSetData(i: number, data: PluginData) {
-        const graphic = graphics.value[i];
-        if (graphic) {
-            graphic.data = data;
-        }
-    }
 
-    return { editors, graphics, editorAdd, editorSetData, editorSetOpened, graphicsAdd, graphicsSetData, graphicsSetOpened }
+    return { editors, graphics, editorAdd, editorSetData, editorSetOpened, graphicsAdd, graphicsSetOpened }
 })
