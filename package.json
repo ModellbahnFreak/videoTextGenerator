@@ -1,0 +1,22 @@
+{
+  "name": "videotextgenerator",
+  "version": "2.0.0",
+  "description": "Tool for generating overlays etc. for use in broadcast",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ModellbahnFreak/videoTextGenerator.git"
+  },
+  "author": "ModellbahnFreak",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ModellbahnFreak/videoTextGenerator/issues"
+  },
+  "homepage": "https://github.com/ModellbahnFreak/videoTextGenerator#readme",
+  "dependencies": {
+    "frontend": "file:frontend"
+  }
+}
