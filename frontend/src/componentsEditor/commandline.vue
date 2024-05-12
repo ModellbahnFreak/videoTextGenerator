@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import type { PluginData } from '@videotextgenerator/api';
-
-const pluginData: PluginData = { title: "Commandline" }
-const emit = defineEmits(["plugindata"]);
-emit("plugindata", pluginData);
 
 </script>
 
 <template>
     <v-card-text>
-        Hallo Welt Editor
+        <v-row>
+            <v-col>
+                <v-text-field label="Command" variant="underlined" :hide-details="true"></v-text-field>
+            </v-col>
+            <v-col cols="1"><v-btn prepend-icon="mdi-send">Exec</v-btn></v-col>
+        </v-row>
     </v-card-text>
 </template>
