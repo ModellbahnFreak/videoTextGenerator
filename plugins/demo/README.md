@@ -40,3 +40,4 @@
     - This is not required. Plugin can manage compilation itself
 - The file referenced in `package.json` under `exports["./backend"]` will be included
     - It MUST provide an _instance_ of `BackendPlugin` as default export
+- Alternative: Have a `index.js` in the folder `frontend` or `out/frontend`

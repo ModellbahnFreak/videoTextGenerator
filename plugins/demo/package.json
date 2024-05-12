@@ -5,7 +5,8 @@
   "main": "./out/index.js",
   "exports": {
     ".": "./out/index.js",
-    "./frontend": "./frontend/index.ts"
+    "./frontend": "./frontend/index.ts",
+    "./backend": "./out/backend/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
