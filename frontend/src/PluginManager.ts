@@ -1,13 +1,14 @@
 import type { FrontendPlugin } from "@videotextgenerator/api";
 import { usePluginStore } from "./vuePlugins/stores/plugin";
 import { FrontendAPI } from "./FrontendAPI";
-import { pl } from "vuetify/locale";
 import { defineAsyncComponent, type AsyncComponentLoader } from "vue";
 import { useComponentStore } from "./vuePlugins/stores/component";
+import { useDataKeyStore } from "./vuePlugins/stores/dataKey";
 
 export async function loadPlugins(): Promise<void> {
 
     const pluginStore = usePluginStore();
+    const dataKeyStore = useDataKeyStore();
 
     const plugins = import.meta.glob([
         "@/componentsGraphic/index.ts", "@/componentsEditor/index.ts",
@@ -31,7 +32,7 @@ export async function loadPlugins(): Promise<void> {
                     console.error(pluginPath + " is not a plugin or uuid is invalid. Ignoring import.");
                     continue;
                 }
-                pluginStore.addPlugin(folderName, plugin, new FrontendAPI(plugin.uuid));
+                pluginStore.addPlugin(folderName, plugin, new FrontendAPI(plugin.uuid, dataKeyStore));
             }
         }
     }
