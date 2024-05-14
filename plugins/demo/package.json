@@ -13,7 +13,7 @@
   },
   "author": "ModellbahnFreak",
   "license": "MIT",
-  "dependencies": {
+  "devDependencies": {
     "@videotextgenerator/api": "file:../../api"
   }
 }

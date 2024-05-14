@@ -4,7 +4,9 @@
   "description": "Tool for generating overlays etc. for use in broadcast",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build && cd ..",
+    "build:backend": "cd backend && npm run build && cd .."
   },
   "repository": {
     "type": "git",

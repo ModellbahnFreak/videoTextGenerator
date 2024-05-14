@@ -4,9 +4,13 @@
   "description": "",
   "main": "out/index.js",
   "scripts": {
-    "build": "node scripts/compile.js"
+    "build": "node scripts/build.js",
+    "build:watch": "node scripts/build.js -w"
   },
   "author": "ModellbahnFreak",
   "license": "MIT",
-  "types": "./out/index.d.ts"
+  "types": "./out/index.d.ts",
+  "devDependencies": {
+    "@videotextgenerator/api": "file:../../api"
+  }
 }
