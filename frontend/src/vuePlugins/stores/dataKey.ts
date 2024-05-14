@@ -1,13 +1,18 @@
+import { SOCKET_INSTANCE } from "@/SocketToBackend";
 import type { DataKey, ROConsumer } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
 import { ref, type Ref } from "vue";
+
 
 export const useDataKeyStore = defineStore('dataKey', () => {
     const dataKeyValues = ref<{ [pluginUuid: string]: Ref<{ [dataKey: string]: Ref<unknown> }> }>({});
     const dataKeysListeners = ref<{ [pluginUuid: string]: Ref<{ [dataKey: string]: Ref<Map<ROConsumer<unknown>, boolean>> }> }>({});
     const dataKeys = ref<{ [pluginUuid: string]: { [dataKey: string]: FrontendDataKey<unknown> } }>({});
 
-    function setDataKeyValue(pluginUuid: string, dataKey: string, value: unknown) {
+    function setDataKeyValue(pluginUuid: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
+        if (sendToServer) {
+            SOCKET_INSTANCE.dataKey(pluginUuid, dataKey, value);
+        }
         if (!dataKeyValues.value[pluginUuid]) {
             dataKeyValues.value[pluginUuid] = ref({});
         }
@@ -61,12 +66,14 @@ export const useDataKeyStore = defineStore('dataKey', () => {
 
     }
 
-    function dataKeyFor<T>(pluginUuid: string, dataKey: string): FrontendDataKey<T> {
+    async function dataKeyFor<T>(pluginUuid: string, dataKey: string): Promise<FrontendDataKey<T>> {
         if (!dataKeys.value[pluginUuid]) {
             dataKeys.value[pluginUuid] = {};
         }
         if (!dataKeys.value[pluginUuid][dataKey]) {
             dataKeys.value[pluginUuid][dataKey] = new FrontendDataKey(pluginUuid, dataKey);
+            const value = await SOCKET_INSTANCE.dataKeyRequest(pluginUuid, dataKey);
+            setDataKeyValue(pluginUuid, dataKey, value, false);
         }
         return dataKeys.value[pluginUuid][dataKey] as FrontendDataKey<T>;
     }
