@@ -10,3 +10,5 @@ class DemoPluginBackend extends DemoPluginBase implements BackendPlugin {
     }
 
 }
+
+export default new DemoPluginBackend();
