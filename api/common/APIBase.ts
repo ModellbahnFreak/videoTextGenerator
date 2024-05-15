@@ -1,5 +1,5 @@
 import { DataKey } from "./DataKey";
 
 export interface APIBase {
-    getDataKey<T>(keyName: string, pluginUuid?: string): Promise<DataKey<T | unknown>>;
+    getDataKey<T>(keyName: string, topic?: string): Promise<DataKey<T | unknown>>;
 }

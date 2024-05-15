@@ -5,23 +5,23 @@ import { ref, type Ref } from "vue";
 
 
 export const useDataKeyStore = defineStore('dataKey', () => {
-    const dataKeyValues = ref<{ [pluginUuid: string]: Ref<{ [dataKey: string]: Ref<unknown> }> }>({});
-    const dataKeysListeners = ref<{ [pluginUuid: string]: Ref<{ [dataKey: string]: Ref<Map<ROConsumer<unknown>, boolean>> }> }>({});
-    const dataKeys = ref<{ [pluginUuid: string]: { [dataKey: string]: FrontendDataKey<unknown> } }>({});
+    const dataKeyValues = ref<{ [topic: string]: Ref<{ [dataKey: string]: Ref<unknown> }> }>({});
+    const dataKeysListeners = ref<{ [topic: string]: Ref<{ [dataKey: string]: Ref<Map<ROConsumer<unknown>, boolean>> }> }>({});
+    const dataKeys = ref<{ [topic: string]: { [dataKey: string]: FrontendDataKey<unknown> } }>({});
 
-    function setDataKeyValue(pluginUuid: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
+    function setDataKeyValue(topic: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
         if (sendToServer) {
-            SOCKET_INSTANCE.dataKey(pluginUuid, dataKey, value);
+            SOCKET_INSTANCE.dataKey(topic, dataKey, value);
         }
-        if (!dataKeyValues.value[pluginUuid]) {
-            dataKeyValues.value[pluginUuid] = ref({});
+        if (!dataKeyValues.value[topic]) {
+            dataKeyValues.value[topic] = ref({});
         }
-        if (!dataKeyValues.value[pluginUuid].value[dataKey]) {
-            dataKeyValues.value[pluginUuid].value[dataKey] = ref(value);
+        if (!dataKeyValues.value[topic].value[dataKey]) {
+            dataKeyValues.value[topic].value[dataKey] = ref(value);
         } else {
-            dataKeyValues.value[pluginUuid].value[dataKey].value = value;
+            dataKeyValues.value[topic].value[dataKey].value = value;
         }
-        const listeners = dataKeysListeners.value[pluginUuid]?.value[dataKey];
+        const listeners = dataKeysListeners.value[topic]?.value[dataKey];
         if (listeners) {
             for (const [listener, listen] of listeners.value) {
                 listener(value as Readonly<unknown>);
@@ -29,53 +29,53 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         }
     }
 
-    function addListener(pluginUuid: string, dataKey: string, handler: ROConsumer<unknown>) {
-        if (!dataKeysListeners.value[pluginUuid]) {
-            dataKeysListeners.value[pluginUuid] = ref({});
+    function addListener(topic: string, dataKey: string, handler: ROConsumer<unknown>) {
+        if (!dataKeysListeners.value[topic]) {
+            dataKeysListeners.value[topic] = ref({});
         }
-        if (!dataKeysListeners.value[pluginUuid].value[dataKey]) {
-            dataKeysListeners.value[pluginUuid].value[dataKey] = ref(new Map());
+        if (!dataKeysListeners.value[topic].value[dataKey]) {
+            dataKeysListeners.value[topic].value[dataKey] = ref(new Map());
         }
-        dataKeysListeners.value[pluginUuid].value[dataKey].value.set(handler, true);
+        dataKeysListeners.value[topic].value[dataKey].value.set(handler, true);
     }
 
-    function removeListener(pluginUuid: string, dataKey: string, handler: ROConsumer<unknown>) {
-        if (dataKeysListeners.value[pluginUuid]?.value[dataKey]) {
-            dataKeysListeners.value[pluginUuid].value[dataKey].value.delete(handler);
+    function removeListener(topic: string, dataKey: string, handler: ROConsumer<unknown>) {
+        if (dataKeysListeners.value[topic]?.value[dataKey]) {
+            dataKeysListeners.value[topic].value[dataKey].value.delete(handler);
         }
     }
 
     class FrontendDataKey<T> implements DataKey<T> {
 
-        constructor(public readonly pluginUuid: string, public readonly dataKey: string) { }
+        constructor(public readonly topic: string, public readonly dataKey: string) { }
 
         get value(): Readonly<T> | undefined {
-            return dataKeyValues.value[this.pluginUuid]?.value[this.dataKey]?.value as Readonly<T>;
+            return dataKeyValues.value[this.topic]?.value[this.dataKey]?.value as Readonly<T>;
         }
 
         set(newValue: T): void {
-            setDataKeyValue(this.pluginUuid, this.dataKey, newValue);
+            setDataKeyValue(this.topic, this.dataKey, newValue);
         }
 
         on(handler: ROConsumer<T>): void {
-            addListener(this.pluginUuid, this.dataKey, handler as ROConsumer<unknown>);
+            addListener(this.topic, this.dataKey, handler as ROConsumer<unknown>);
         }
         off(handler: ROConsumer<T>): void {
-            removeListener(this.pluginUuid, this.dataKey, handler as ROConsumer<unknown>);
+            removeListener(this.topic, this.dataKey, handler as ROConsumer<unknown>);
         }
 
     }
 
-    async function dataKeyFor<T>(pluginUuid: string, dataKey: string): Promise<FrontendDataKey<T>> {
-        if (!dataKeys.value[pluginUuid]) {
-            dataKeys.value[pluginUuid] = {};
+    async function dataKeyFor<T>(topic: string, dataKey: string): Promise<FrontendDataKey<T>> {
+        if (!dataKeys.value[topic]) {
+            dataKeys.value[topic] = {};
         }
-        if (!dataKeys.value[pluginUuid][dataKey]) {
-            dataKeys.value[pluginUuid][dataKey] = new FrontendDataKey(pluginUuid, dataKey);
-            const value = await SOCKET_INSTANCE.dataKeyRequest(pluginUuid, dataKey);
-            setDataKeyValue(pluginUuid, dataKey, value, false);
+        if (!dataKeys.value[topic][dataKey]) {
+            dataKeys.value[topic][dataKey] = new FrontendDataKey(topic, dataKey);
+            const value = await SOCKET_INSTANCE.dataKeyRequest(topic, dataKey);
+            setDataKeyValue(topic, dataKey, value, false);
         }
-        return dataKeys.value[pluginUuid][dataKey] as FrontendDataKey<T>;
+        return dataKeys.value[topic][dataKey] as FrontendDataKey<T>;
     }
 
     return { dataKeyValues, dataKeysListeners, setDataKeyValue, addListener, removeListener, dataKeyFor };
