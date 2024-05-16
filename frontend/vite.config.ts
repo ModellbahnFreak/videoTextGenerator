@@ -17,6 +17,14 @@ export default defineConfig({
     }
   },
   server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8088",
+        ws: true,
+        secure: false,
+        changeOrigin: false
+      }
+    },
     fs: {
       strict: true,
       allow: [
