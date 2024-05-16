@@ -1,5 +1,5 @@
 import type { APIBase, DataKey } from "@videotextgenerator/api"
-import { BackendDataKey } from "./BackendDataKey";
+import { BackendDataKey } from "./BackendDataKey.js";
 
 export class BackendAPI implements APIBase {
     constructor(protected readonly pluginUuid: string) {

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/ModellbahnFreak/videoTextGenerator#readme",
   "dependencies": {
+    "backend": "file:backend",
     "frontend": "file:frontend"
   }
 }
