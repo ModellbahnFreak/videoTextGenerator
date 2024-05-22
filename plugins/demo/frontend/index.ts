@@ -1,4 +1,4 @@
-import { APIBase, FrontendPlugin } from "@videotextgenerator/api";
+import type { APIBase, FrontendPlugin } from "@videotextgenerator/api";
 import { DemoPluginBase } from "../common/DemoPluginBase";
 
 class DemoPluginFrontend extends DemoPluginBase implements FrontendPlugin {

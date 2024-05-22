@@ -1,4 +1,4 @@
-import { DataKey, ROConsumer } from "@videotextgenerator/api";
+import type { DataKey, ROConsumer } from "@videotextgenerator/api";
 
 export class BackendDataKey<T> implements DataKey<T> {
     value: Readonly<T> | undefined;
