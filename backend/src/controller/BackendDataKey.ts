@@ -22,7 +22,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     set(newValue: T): void {
         this.dataKey.version++;
         this.dataKey.value = newValue;
-        this.dataKey.createdBy = null;
+        this.dataKey.createdBy = Promise.resolve(null);
         this.callListeners(newValue);
     }
 
@@ -33,6 +33,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         this.listeners.delete(handler);
     }
     protected callListeners(value?: T) {
+        console.debug(`DataKey ${this.dataKey.topicId}/d${this.dataKey.key} changed to version${this.dataKey.version}`);
         const newValue = value ?? this.value;
         for (const [listener, _] of this.listeners) {
             listener(newValue);
@@ -43,7 +44,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         if (this.dataKey.version < msg.version || (this.dataKey.version > (4294967295 - 5) && msg.version < 5)) {
             this.dataKey.version = msg.version;
             this.dataKey.value = msg.value;
-            this.dataKey.createdBy = fromClient ?? null;
+            this.dataKey.createdBy = Promise.resolve(fromClient ?? null);
             this.dataKey = await dataKeyRepository.save(this.dataKey);
             this.callListeners();
             return;
@@ -51,12 +52,13 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         if (this.dataKey.version > msg.version) {
             return;
         }
-        if (this.dataKey.version == msg.version && !!this.dataKey.createdBy &&
-            (!fromClient || fromClient.uuid.localeCompare(this.dataKey.createdBy?.uuid ?? "") > 1)
+        const currCreatedBy = await this.dataKey.createdBy;
+        if (this.dataKey.version == msg.version && !!currCreatedBy &&
+            (!fromClient || fromClient.uuid.localeCompare(currCreatedBy?.uuid ?? "") > 1)
         ) {
             this.dataKey.version++;
             this.dataKey.value = msg.value;
-            this.dataKey.createdBy = fromClient ?? null;
+            this.dataKey.createdBy = Promise.resolve(fromClient ?? null);
             this.dataKey = await dataKeyRepository.save(this.dataKey);
             this.callListeners();
             return;

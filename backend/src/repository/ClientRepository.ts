@@ -21,6 +21,7 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
         } else {
             client = new Client();
         }
+        console.debug(`Logging in client ${client?.uuid}`);
         if (!client) {
             return undefined;
         } else {

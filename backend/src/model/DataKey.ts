@@ -24,5 +24,5 @@ export class DataKey {
     version: number = -1;
 
     @ManyToOne(() => Client)
-    createdBy: Client | null = null;
+    createdBy: Promise<Client | null> = Promise.resolve(null);
 }
