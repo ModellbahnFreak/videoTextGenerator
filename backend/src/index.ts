@@ -8,7 +8,11 @@ import { SocketManager } from "./controller/SocketManager.js";
 
 dotenv.config({});
 
+console.debug(`Starting in ${process.env.NODE_ENV} mode`);
+
 async function main() {
+    await dataSource.initialize();
+
     const app = express();
     const httpServer = http.createServer(app);
     app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));

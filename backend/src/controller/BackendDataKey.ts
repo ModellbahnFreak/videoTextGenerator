@@ -33,7 +33,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         this.listeners.delete(handler);
     }
     protected callListeners(value?: T) {
-        console.debug(`DataKey ${this.dataKey.topicId}/d${this.dataKey.key} changed to version${this.dataKey.version}`);
+        console.debug(`DataKey ${this.dataKey.topicIdOrName}/d${this.dataKey.key} changed to version${this.dataKey.version}`);
         const newValue = value ?? this.value;
         for (const [listener, _] of this.listeners) {
             listener(newValue);
@@ -72,7 +72,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         return this.dataKey.key;
     }
     get topic(): string {
-        return this.dataKey.topicId;
+        return this.dataKey.topicIdOrName;
     }
 
     private static instances: BackendDataKey<unknown>[] = [];

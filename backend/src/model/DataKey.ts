@@ -14,11 +14,11 @@ export class DataKey {
     @Column({ type: "simple-json" })
     value: any;
 
-    @PrimaryColumn({ type: "string", name: "topicId", nullable: false })
     @ManyToOne(() => Topic, topic => topic.dataKeys)
     @JoinColumn()
-    topic: Promise<Topic> = Promise.reject();
-    topicId: string = "";
+    topic: Promise<Topic> = Promise.resolve(new Topic());
+    @PrimaryColumn({ nullable: false })
+    topicIdOrName: string = "";
 
     @Column()
     version: number = -1;

@@ -21,11 +21,12 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
         } else {
             client = new Client();
         }
-        console.debug(`Logging in client ${client?.uuid}`);
         if (!client) {
             return undefined;
         } else {
-            return this.save(client);
+            const saved = await this.save(client);
+            console.debug(`Logging in client ${saved?.uuid}`);
+            return saved;
         }
     }
 } as ClientRepository);

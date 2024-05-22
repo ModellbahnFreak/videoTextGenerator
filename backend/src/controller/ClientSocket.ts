@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import type { WebsocketDataKeyMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
+import type { WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
 import { Client } from "../model/Client.js";
 import { BackendDataKey } from "./BackendDataKey.js";
 import { clientRepository } from "../repository/ClientRepository.js";
@@ -59,6 +59,12 @@ export class ClientSocket {
             return;
         }
         this.client = newClient;
+        const clientConfig: WebsocketClientConfigMessage = {
+            type: "clientConfig",
+            uuid: newClient.uuid,
+            config: {},
+        };
+        this.send(clientConfig);
     }
 
     protected send(msg: WebsocketMessage) {
