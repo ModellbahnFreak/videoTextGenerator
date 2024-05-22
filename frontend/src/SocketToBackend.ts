@@ -1,4 +1,5 @@
-import type { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage, WesocketSubscribeMessage } from "@videotextgenerator/api"
+import type { WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketLoginMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api"
+import type { useClientConfigStore } from "./vuePlugins/stores/clientConfig";
 
 export type DataKeyListener = (topic: string, dataKey: string, payload: unknown, version?: number) => void;
 export type EventListener = (topic: string, event: string, payload: unknown, eventUuid?: string) => void;
@@ -15,6 +16,8 @@ export class SocketToBackend {
 
     protected readonly dataKeyListeners = new Map<DataKeyListener, boolean>();
     protected readonly eventListeners = new Map<EventListener, boolean>();
+
+    public clientConfigStore: ReturnType<typeof useClientConfigStore> | undefined;
 
     constructor() {
         this.openSocket();
@@ -42,8 +45,13 @@ export class SocketToBackend {
 
     protected socketOpen() {
         console.log("Connection to backend established");
+        const loginMsg: WebsocketLoginMessage = {
+            type: "login",
+            token: this.clientConfigStore?.token
+        };
+        this.send(loginMsg);
         for (const topic of this.subscribedTopcis) {
-            const subMsg: WesocketSubscribeMessage = {
+            const subMsg: WebsocketSubscribeMessage = {
                 type: "subscribe",
                 topic
             }
@@ -65,6 +73,9 @@ export class SocketToBackend {
         }
         const data = JSON.parse(msgEvent.data) as WebsocketMessage;
         switch (data.type) {
+            case "clientConfig":
+                this.clientConfigStore?.receivedConfig(data as WebsocketClientConfigMessage);
+                break;
             case "dataKey":
                 const dataKeyEvent = data as WebsocketDataKeyMessage;
                 if (this.isDataKeyVersionNew(dataKeyEvent.topic, dataKeyEvent.dataKey, dataKeyEvent.version)) {
@@ -143,7 +154,7 @@ export class SocketToBackend {
             }
             this.socket.send(JSON.stringify(message));
         } else {
-            if (message.type !== "subscribe") {
+            if (message.type !== "subscribe" && message.type !== "login") {
                 this.deferredMessages.splice(0, 0, message);
                 this.openSocket();
             }
