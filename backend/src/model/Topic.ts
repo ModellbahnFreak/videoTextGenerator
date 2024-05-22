@@ -8,7 +8,7 @@ export class Topic {
     idOrName: string
 
     @OneToMany(() => DataKey, dataKey => dataKey.topic)
-    dataKeys: DataKey<unknown>[] = [];
+    dataKeys: Promise<DataKey<unknown>[]> = Promise.resolve([]);
 
     constructor(pluginUuidOrTopic: string) {
         this.idOrName = pluginUuidOrTopic;

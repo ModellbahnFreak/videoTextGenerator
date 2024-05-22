@@ -15,7 +15,7 @@ export class Client {
 
     protected readonly sockets: Map<ClientSocket, WebSocketMetadata> = new Map();
 
-    protected readonly topicSubscriptions: Topic[] = [];
+    protected readonly topicSubscriptions: Promise<Topic[]> = Promise.resolve([]);
 
     constructor() {
     }

@@ -8,8 +8,6 @@ export class ClientSocket {
 
     protected client: Client | undefined;
 
-    protected readonly topicSubscriptions: Topic[] = [];
-
     constructor(
         protected readonly socket: WebSocket,
         protected readonly clientRepository: ClientRepository
@@ -31,8 +29,9 @@ export class ClientSocket {
             this.loginClient();
         }
         switch (json.type) {
-            case ""
-
+            case "dataKey":
+                //todo
+                break;
         }
     }
 

@@ -39,12 +39,19 @@ export class DataKey<T> implements IDatakKey<T> {
     off(handler: ROConsumer<T>): void {
         this.listeners.delete(handler);
     }
+    protected callListeners() {
+        const newValue = this.value;
+        for (const [listener, _] of this.listeners) {
+            listener(newValue);
+        }
+    }
 
     received(msg: WebsocketDataKeyMessage, fromClient: Client | undefined): void {
         if (this.version < msg.version || (this.version > (4294967295 - 5) && msg.version < 5)) {
             this.version = msg.version;
             this.value = msg.value;
             this.createdBy = fromClient ?? null;
+            this.callListeners();
             return;
         }
         if (this.version > msg.version) {
@@ -56,6 +63,8 @@ export class DataKey<T> implements IDatakKey<T> {
             this.version++;
             this.value = msg.value;
             this.createdBy = fromClient ?? null;
+            this.callListeners();
+            return;
         }
     }
 
