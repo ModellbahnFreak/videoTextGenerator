@@ -15,10 +15,8 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
                 console.error("Token login not yet implemented");
                 return undefined;
             }
-            client = await this.findOne({
-                where: {
-                    uuid: uuid
-                }
+            client = await this.findOneBy({
+                uuid: uuid
             });
         } else {
             client = new Client();

@@ -4,13 +4,9 @@ import { DataKey } from "./DataKey.js";
 @Entity()
 export class Topic {
 
-    @PrimaryColumn()
-    idOrName: string
+    @PrimaryColumn({})
+    idOrName: string = ""
 
     @OneToMany(() => DataKey, dataKey => dataKey.topic)
-    dataKeys: Promise<DataKey<unknown>[]> = Promise.resolve([]);
-
-    constructor(pluginUuidOrTopic: string) {
-        this.idOrName = pluginUuidOrTopic;
-    }
+    dataKeys: Promise<DataKey[]> = Promise.resolve([]);
 }

@@ -2,7 +2,7 @@ import type { BackendPlugin } from "@videotextgenerator/api";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as url from "url";
-import { BackendAPI } from "./BackendAPI.js";
+import { BackendAPI } from "./controller/BackendAPI.js";
 
 export interface PluginWithMetadata {
     plugin: BackendPlugin;
