@@ -1,5 +1,5 @@
 export interface WebsocketMessage {
-    type: "dataKey" | "event" | "dataKeyRequest" | "subscribe";
+    type: "dataKey" | "event" | "dataKeyRequest" | "subscribe" | "login" | "clientConfig" | "error";
 }
 
 export interface WebsocketDataKeyMessage extends WebsocketMessage {
@@ -24,7 +24,24 @@ export interface WebsocketDataKeyRequestMessage extends WebsocketMessage {
     dataKey: string;
 }
 
-export interface WesocketSubscribeMessage extends WebsocketMessage {
+export interface WebsocketSubscribeMessage extends WebsocketMessage {
     type: "subscribe",
     topic: string,
+}
+
+export interface WebsocketLoginMessage extends WebsocketMessage {
+    type: "login",
+    token?: string
+}
+
+export interface WebsocketClientConfigMessage extends WebsocketMessage {
+    type: "clientConfig",
+    uuid: string,
+    config: any //todo
+}
+
+export interface WebsocketErrorMessage extends WebsocketMessage {
+    type: "error",
+    message?: string,
+    relatesTo?: WebsocketMessage
 }
