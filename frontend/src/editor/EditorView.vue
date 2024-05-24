@@ -33,7 +33,7 @@ const editorUnopenedAsItems = computed(() => {
 <template>
     <v-app>
         <v-main class="pa-2">
-            <h1>Editor</h1>
+            <h1>Editor<span v-if="$socketsManager.numOpenSockets <= 0"> - NOT CONNECTED!</span></h1>
             <v-row>
                 <v-col cols="3" class="pr-0">
                     <v-autocomplete label="Panel" density="compact" v-model="panelToOpen" :items="editorUnopenedAsItems"
