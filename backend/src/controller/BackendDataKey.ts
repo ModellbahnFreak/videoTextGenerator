@@ -19,7 +19,13 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         return this.dataKey.value;
     }
 
-    set(newValue: T): void {
+    async set(newValue: T): Promise<void> {
+        const reloaded = await dataKeyRepository.findByName(this.dataKey.topicIdOrName, this.dataKey.key);
+        if (reloaded) {
+            this.dataKey = reloaded;
+        } else {
+            console.warn(`Data key ${this.dataKey.topic}/d-${this.dataKey.key} has been lost from database`);
+        }
         this.dataKey.version++;
         this.dataKey.value = newValue;
         this.dataKey.createdBy = Promise.resolve(null);
@@ -33,7 +39,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         this.listeners.delete(handler);
     }
     protected callListeners(value?: T) {
-        console.debug(`DataKey ${this.dataKey.topicIdOrName}/d${this.dataKey.key} changed to version${this.dataKey.version}`);
+        console.debug(`DataKey ${this.dataKey.topicIdOrName}/d-${this.dataKey.key} changed to version ${this.dataKey.version}`);
         const newValue = value ?? this.value;
         for (const [listener, _] of this.listeners) {
             listener(newValue);
@@ -41,6 +47,12 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     }
 
     async received(msg: WebsocketDataKeyMessage, fromClient: Client | undefined): Promise<void> {
+        const reloaded = await dataKeyRepository.findByName(this.dataKey.topicIdOrName, this.dataKey.key);
+        if (reloaded) {
+            this.dataKey = reloaded;
+        } else {
+            console.warn(`Data key ${this.dataKey.topic}/d-${this.dataKey.key} has been lost from database`);
+        }
         if (this.dataKey.version < msg.version || (this.dataKey.version > (4294967295 - 5) && msg.version < 5)) {
             this.dataKey.version = msg.version;
             this.dataKey.value = msg.value;
@@ -80,21 +92,23 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         if (topic == "" || dataKey == "") {
             throw new Error("Illegal Arguments. Need topic and data key");
         }
+        console.log(`Requested dataKey ${topic}/d-${dataKey}`);
         let instance = BackendDataKey.instances.filter(i => i.topic == topic && i.key == dataKey)[0];
         if (!instance) {
             let topicInstance = await topicRepository.findOneBy({ idOrName: topic });
             if (!topicInstance) {
                 topicInstance = new Topic();
                 topicInstance.idOrName = topic;
-                await topicRepository.save(topicInstance);
+                topicInstance = await topicRepository.save(topicInstance);
             }
             let dataKeyInstance = await dataKeyRepository.findByName(topicInstance, dataKey);
             if (!dataKeyInstance) {
                 dataKeyInstance = new DataKey();
                 dataKeyInstance.key = dataKey;
                 dataKeyInstance.topic = Promise.resolve(topicInstance);
-                dataKeyInstance.value = undefined;
-                await dataKeyRepository.save(dataKeyInstance);
+                dataKeyInstance.topicIdOrName = topicInstance.idOrName;
+                dataKeyInstance.value = null;
+                dataKeyInstance = await dataKeyRepository.save(dataKeyInstance);
             }
             instance = new BackendDataKey(dataKeyInstance);
             BackendDataKey.instances.push(instance);
@@ -103,7 +117,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     }
 
     public static async received(msg: WebsocketDataKeyMessage, fromClient: Client | undefined): Promise<void> {
-        return (await this.for(msg.topic, msg.dataKey)).received(msg, fromClient);
+        return (await BackendDataKey.for(msg.topic, msg.dataKey)).received(msg, fromClient);
     }
 
 }

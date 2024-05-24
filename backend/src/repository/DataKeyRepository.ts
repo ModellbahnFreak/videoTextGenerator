@@ -11,7 +11,7 @@ export const dataKeyRepository: DataKeyRepository = dataSource.getRepository(Dat
     async findByName(topic, dataKey) {
         const topicName = typeof topic === "string" ? topic : topic.idOrName;
         return this.findOneBy({
-            topic: { idOrName: topicName },
+            topicIdOrName: topicName,
             key: dataKey
         });
     },

@@ -5,6 +5,7 @@ import express from "express"
 import { WebSocketServer } from "ws";
 import dataSource from "./dataSource.js";
 import { SocketManager } from "./controller/SocketManager.js";
+import { uuidGenerator } from "./utils.js";
 
 dotenv.config({});
 
@@ -17,9 +18,12 @@ async function main() {
     const httpServer = http.createServer(app);
     app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
 
-    const wsManager = new SocketManager({
-        server: httpServer,
-    });
+    const wsManager = new SocketManager(
+        //todo: consistent generation of server uuid
+        uuidGenerator(),
+        {
+            server: httpServer,
+        });
 
     let port = parseInt(process.env.VIDEOTEXTGENERATOR_SERVER_PORT ?? "NaN");
     console.log(port);

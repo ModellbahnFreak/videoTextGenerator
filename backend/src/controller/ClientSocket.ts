@@ -10,7 +10,8 @@ export class ClientSocket {
 
     constructor(
         protected readonly socket: WebSocket,
-        public readonly uuid: string
+        public readonly uuid: string,
+        protected readonly serverUuid: string,
     ) {
         socket.on("message", this.onMessage.bind(this));
         socket.on("error", this.onError.bind(this));
@@ -62,6 +63,7 @@ export class ClientSocket {
         const clientConfig: WebsocketClientConfigMessage = {
             type: "clientConfig",
             uuid: newClient.uuid,
+            serverUuid: this.serverUuid,
             config: {},
         };
         this.send(clientConfig);

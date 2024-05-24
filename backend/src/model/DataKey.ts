@@ -11,8 +11,8 @@ export class DataKey {
     @PrimaryColumn()
     key: string = ""
 
-    @Column({ type: "simple-json" })
-    value: any;
+    @Column({ type: "simple-json", nullable: true })
+    value?: any | null;
 
     @ManyToOne(() => Topic, topic => topic.dataKeys)
     @JoinColumn()

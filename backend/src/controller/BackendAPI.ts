@@ -13,4 +13,10 @@ export class BackendAPI implements APIBase {
         return BackendDataKey.for<T>(topic ?? this.pluginUuid, keyName);
     }
 
+    on<T>(event: string, listener: (payload: T) => void, topic?: string | undefined): void {
+        throw new Error("Method not implemented.");
+    }
+    off<T>(event: string, listener: (payload: T) => void, topic?: string | undefined): void {
+        throw new Error("Method not implemented.");
+    }
 }

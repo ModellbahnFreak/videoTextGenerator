@@ -17,7 +17,8 @@ export class SocketManager {
     protected closedWatcher: ReturnType<typeof setInterval>;
 
     constructor(
-        webSocketServerOrOptions?: WebSocketServer | ServerOptions
+        protected readonly serverUuid: string,
+        webSocketServerOrOptions?: WebSocketServer | ServerOptions,
     ) {
         if (webSocketServerOrOptions && webSocketServerOrOptions instanceof WebSocketServer) {
             this.server = webSocketServerOrOptions;
@@ -40,7 +41,7 @@ export class SocketManager {
         const uuid = uuidGenerator();
         console.debug(`New WebSocket connection ${uuid}`);
         this.checkOpenSockets();
-        this.clientSockets.set(uuid, new ClientSocket(socket, uuid));
+        this.clientSockets.set(uuid, new ClientSocket(socket, uuid, this.serverUuid));
     }
 
     protected onError(error: Error) {
