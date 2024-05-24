@@ -8,6 +8,9 @@ const valueStr = ref("");
 
 const api = await includedEditorsComponents.api
 const testDataKey = await api.getDataKey("Test");
+console.log(testDataKey);
+
+console.log(await api.getDataKey("Test"));
 
 async function setValue() {
     const topicStr = topic.value;
@@ -38,7 +41,7 @@ async function setValue() {
             <v-col cols="1"><v-btn prepend-icon="mdi-send" @click="setValue">Exec</v-btn></v-col>
         </v-row>
         <v-row>
-            Value of IncludedEditors.Test = {{ testDataKey?.value }}
+            Value of IncludedEditors.Test = {{ testDataKey }}
         </v-row>
     </v-card-text>
 </template>
