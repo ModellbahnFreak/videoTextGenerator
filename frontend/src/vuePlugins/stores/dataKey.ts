@@ -1,13 +1,13 @@
 import type { DataKeyListener, SocketsManager } from "@/backend/SocketsManager";
 import type { DataKey, ROConsumer } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
-import { ref, type Ref } from "vue";
+import { computed, ref, type Ref, type WritableComputedRef } from "vue";
 
 
 export const useDataKeyStore = defineStore('dataKey', () => {
     const dataKeyValues = ref<{ [topic: string]: { [dataKey: string]: unknown } }>({});
     const dataKeysListeners = ref<{ [topic: string]: { [dataKey: string]: Map<ROConsumer<unknown>, boolean> } }>({});
-    const dataKeys = ref<{ [topic: string]: { [dataKey: string]: FrontendDataKey<unknown> } }>({});
+    const dataKeys: { [topic: string]: { [dataKey: string]: DataKey<unknown> } } = {};
 
     const socketsManager = ref<SocketsManager | undefined>();
 
@@ -44,38 +44,41 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         }
     }
 
-    class FrontendDataKey<T> implements DataKey<T> {
+    const test: WritableComputedRef<string> = computed({
+        get: () => "a",
+        set: (v: string) => { }
+    });
 
-        constructor(public readonly topic: string, public readonly dataKey: string) { }
-
-        get value(): Readonly<T> | undefined {
-            return (dataKeyValues.value[this.topic] ?? {})[this.dataKey] as Readonly<T>;
+    async function dataKeyFor<T>(topic: string, dataKey: string): Promise<DataKey<T>> {
+        if (!dataKeys[topic]) {
+            Object.assign(dataKeys, { [topic]: {} });
         }
+        if (!dataKeys[topic][dataKey]) {
+            const comp: DataKey<unknown> = Object.assign(computed({
+                get: () => (dataKeyValues.value[topic] ?? {})[dataKey] as Readonly<T>,
+                set: (newValue: T) => setDataKeyValue(topic, dataKey, newValue),
+            }),
+                {
+                    async set(newValue: T): Promise<void> {
+                        setDataKeyValue(topic, dataKey, newValue);
+                    },
 
-        async set(newValue: T): Promise<void> {
-            setDataKeyValue(this.topic, this.dataKey, newValue);
-        }
+                    on(handler: ROConsumer<T>): void {
+                        addListener(topic, dataKey, handler as ROConsumer<unknown>);
+                    },
 
-        on(handler: ROConsumer<T>): void {
-            addListener(this.topic, this.dataKey, handler as ROConsumer<unknown>);
-        }
-        off(handler: ROConsumer<T>): void {
-            removeListener(this.topic, this.dataKey, handler as ROConsumer<unknown>);
-        }
+                    off(handler: ROConsumer<T>): void {
+                        removeListener(topic, dataKey, handler as ROConsumer<unknown>);
+                    },
+                });
+            Object.assign(dataKeys[topic], { [dataKey]: comp });
+            console.log(comp, dataKeys);
 
-    }
-
-    async function dataKeyFor<T>(topic: string, dataKey: string): Promise<FrontendDataKey<T>> {
-        if (!dataKeys.value[topic]) {
-            dataKeys.value[topic] = {};
-        }
-        if (!dataKeys.value[topic][dataKey]) {
-            dataKeys.value[topic][dataKey] = new FrontendDataKey(topic, dataKey);
-            socketsManager.value?.dataKeyRequest(topic, dataKey).then(() => {
-                setDataKeyValue(topic, dataKey, undefined, false);
+            socketsManager.value?.dataKeyRequest(topic, dataKey).then(value => {
+                setDataKeyValue(topic, dataKey, value, false);
             });
         }
-        return dataKeys.value[topic][dataKey] as FrontendDataKey<T>;
+        return dataKeys[topic][dataKey] as DataKey<T>;
     }
 
     const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value) => {

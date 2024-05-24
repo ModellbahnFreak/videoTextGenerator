@@ -157,19 +157,26 @@ export class SocketsManager implements VuePlugin<[]> {
                 type: "dataKeyRequest",
                 topic, dataKey
             }
+            let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
             const listener: DataKeyListener = (receivedTopic, receivedDataKey, value) => {
-                if (receivedTopic == topic && receivedDataKey == dataKey) {
-                    this.off("dataKey", listener);
-                    resolve(value);
+                if (timeout) {
+                    clearTimeout(timeout);
                 }
+                resolve(value);
             }
-            this.on("dataKey", listener);
-            setTimeout(() => {
-                this.off("dataKey", listener);
-                console.warn(`Timeout waiting for response to dataKeyRequest ${topic}.${dataKey} was reached`);
+            if (this.numOpenSockets > 0) {
+                this.on("dataKey", listener, { topic, dataKeyOrEvent: dataKey, once: true });
+                timeout = setTimeout(() => {
+                    this.off("dataKey", listener);
+                    console.warn(`Timeout waiting for response to dataKeyRequest ${topic}.${dataKey} was reached`);
+                    resolve(undefined);
+                }, 1000);
+                this.send(dataKeyMsg);
+            } else {
+                this.send(dataKeyMsg);
+                console.log(`Not waiting for request reply due to not being connected`);
                 resolve(undefined);
-            }, 1000);
-            this.send(dataKeyMsg);
+            }
         });
     }
 
