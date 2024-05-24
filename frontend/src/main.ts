@@ -5,9 +5,9 @@ import App from './App.vue'
 import router from './vuePlugins/router'
 import vuetify from "./vuePlugins/vuetify"
 import { loadPlugins } from './PluginManager'
-import './SocketToBackend'
-import { SOCKET_INSTANCE } from './SocketToBackend'
 import { useClientConfigStore } from './vuePlugins/stores/clientConfig'
+import { SocketsManager } from './backend/SocketsManager'
+import { useDataKeyStore } from './vuePlugins/stores/dataKey'
 
 const app = createApp(App)
 const pinia = createPinia();
@@ -15,8 +15,7 @@ const pinia = createPinia();
 app.use(pinia)
 app.use(router)
 app.use(vuetify);
-
-SOCKET_INSTANCE.clientConfigStore = useClientConfigStore();
+app.use(new SocketsManager(useClientConfigStore(), useDataKeyStore()))
 
 loadPlugins().then(() => {
     app.mount('#app');
