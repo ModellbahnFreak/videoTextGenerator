@@ -13,5 +13,5 @@ export class Client {
 
     @ManyToMany(() => Topic)
     @JoinTable()
-    protected readonly topicSubscriptions: Promise<Topic[]> = Promise.resolve([]);
+    public readonly topicSubscriptions: Promise<Topic[]> = Promise.resolve([]);
 }

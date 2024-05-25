@@ -41,4 +41,12 @@ export class ClientManager {
         };
         socket.send(clientConfig);
     }
+
+    async dataKey(topic: string, dataKey: string, value: unknown, version: number) {
+        [...this.clients.values()].map()
+    }
+
+    event(topic: string, event: string, payload: unknown, evtUuid: string) {
+
+    }
 }
