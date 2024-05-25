@@ -36,7 +36,7 @@ async function main() {
     console.log(`Hello! I am videotextgenerator server uuid ${uuid}`);
 
     await dataSource.initialize();
-    await clientRepository.createServerClient(uuid);
+    const serverClient = await clientRepository.createServerClient(uuid);
     if (!process.env.VIDEOTEXTGENERATOR_SERVER_NO_CLEANUP) {
         await clientRepository.cleanup();
     }
@@ -45,7 +45,7 @@ async function main() {
     const httpServer = http.createServer(app);
     app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
 
-    const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository);
+    const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository, serverClient);
 
     const wsManager = new SocketManager(
         uuid,
