@@ -1,6 +1,6 @@
 import { Topic } from "./Topic.js";
 import { ClientSocket } from "../socket/Socket.js";
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
 import { uuidGenerator } from "../utils.js";
 import { DataKey } from "./DataKey.js";
 
@@ -16,7 +16,14 @@ export class Client {
         if (setUuid) {
             this.uuid = setUuid;
         } else {
-            this.uuid = uuidGenerator()
+            this.uuid = ""
+        }
+    }
+
+    @BeforeInsert()
+    generateUuid() {
+        if (this.uuid == "") {
+            (this as any).uuid = uuidGenerator();
         }
     }
 
@@ -25,7 +32,7 @@ export class Client {
 
     @ManyToMany(() => Topic)
     @JoinTable()
-    public readonly topicSubscriptions: Promise<Topic[]> = Promise.resolve([]);
+    public topicSubscriptions: Promise<Topic[]> = Promise.resolve([]);
 
     @Column({ type: "simple-json", nullable: true })
     public config?: any | null;

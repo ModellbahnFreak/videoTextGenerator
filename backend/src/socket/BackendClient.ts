@@ -1,7 +1,7 @@
 import { ClientSocket } from "./Socket.js";
 import { Client } from "../model/Client.js"
 import { ClientRepository } from "../repository/ClientRepository.js";
-import { WebsocketDataKeyMessage, WebsocketEventMessage, WebsocketMessage } from "@videotextgenerator/api";
+import { WebsocketDataKeyMessage, WebsocketEventMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { ClientManager } from "./ClientManager.js";
 
 export class BackendClient {
@@ -67,7 +67,18 @@ export class BackendClient {
         switch (msg.type) {
             case "dataKey":
                 const dataKeyMsg = msg as WebsocketDataKeyMessage;
+                this.client = await this.manager.clientRepository.addSubscription(this.client, dataKeyMsg.topic);
                 await this.manager.dataKeyManager.received(dataKeyMsg.topic, dataKeyMsg.dataKey, dataKeyMsg.value, dataKeyMsg.version, this.client);
+                break;
+            case "event":
+                const eventMsg = msg as WebsocketEventMessage;
+                this.client = await this.manager.clientRepository.addSubscription(this.client, eventMsg.topic);
+                //TODO: Implement events
+                break;
+            case "subscribe":
+                const subscribeMsg = msg as WebsocketSubscribeMessage;
+                await this.reloadClient();
+                this.client = await this.manager.clientRepository.addSubscription(this.client, subscribeMsg.topics);
                 break;
         }
     }

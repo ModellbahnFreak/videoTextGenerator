@@ -26,7 +26,7 @@ export interface WebsocketDataKeyRequestMessage extends WebsocketMessage {
 
 export interface WebsocketSubscribeMessage extends WebsocketMessage {
     type: "subscribe",
-    topic: string,
+    topics: string[],
 }
 
 export interface WebsocketLoginMessage extends WebsocketMessage {

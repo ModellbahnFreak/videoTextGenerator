@@ -100,10 +100,11 @@ export class SocketToBackend {
     }
 
     protected subscribeAndFlushDeferred() {
-        this.getSubscriptions().map(topic => ({
+        const subscribeMsg: WebsocketSubscribeMessage = {
             type: "subscribe",
-            topic
-        } as WebsocketSubscribeMessage)).forEach(msg => this.send(msg));
+            topics: this.getSubscriptions()
+        }
+        this.send(subscribeMsg);
         while (this.deferredMessages.length > 0) {
             this.send(this.deferredMessages.pop()!!);
         }

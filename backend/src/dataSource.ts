@@ -11,6 +11,7 @@ const dataSource = new DataSource({
     migrations: ["out/migrations/**/*.js"],
     synchronize: isDev,
     logging: isDev,
+    cache: true
 });
 
 export default dataSource;
