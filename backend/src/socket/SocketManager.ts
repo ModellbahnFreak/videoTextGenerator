@@ -1,8 +1,10 @@
 import { IncomingMessage } from "http";
 import { ServerOptions, WebSocket, WebSocketServer } from "ws";
-import { ClientSocket } from "./ClientSocket.js";
+import { ClientSocket } from "./Socket.js";
 import { uuidGenerator } from "../utils.js";
-import { ClientManager } from "./CientManager.js";
+import { ClientManager } from "./ClientManager.js";
+import { ClientRepository } from "../repository/ClientRepository.js";
+import { DataKeyManager } from "../data/DataKeyManager.js";
 
 /**
  * Class responsible for managing the WebSocketServer
@@ -16,10 +18,15 @@ export class SocketManager {
 
     protected clientSockets: Map<string, ClientSocket> = new Map();
     protected closedWatcher: ReturnType<typeof setInterval>;
-    readonly clientManager: ClientManager;
+
+    protected readonly clientManager: ClientManager;
+    public dataKey: typeof ClientManager.prototype.dataKey;
+    public event: typeof ClientManager.prototype.event;
 
     constructor(
         protected readonly serverUuid: string,
+        clientRepository: ClientRepository,
+        dataKeyManager: DataKeyManager,
         webSocketServerOrOptions?: WebSocketServer | ServerOptions,
     ) {
         if (webSocketServerOrOptions && webSocketServerOrOptions instanceof WebSocketServer) {
@@ -37,14 +44,16 @@ export class SocketManager {
         this.closedWatcher = setInterval(this.checkOpenSockets.bind(this), 1000);
         console.log(`Waiting for WebSocket connections...`);
 
-        this.clientManager = new ClientManager();
+        this.clientManager = new ClientManager(clientRepository, dataKeyManager, this.serverUuid);
+        this.dataKey = this.clientManager.dataKey.bind(this.clientManager);
+        this.event = this.clientManager.event.bind(this.clientManager);
     }
 
     protected onConnection(socket: WebSocket, request: IncomingMessage) {
         const uuid = uuidGenerator();
         console.debug(`New WebSocket connection ${uuid}`);
         this.checkOpenSockets();
-        this.clientSockets.set(uuid, new ClientSocket(socket, uuid, this.serverUuid));
+        this.clientSockets.set(uuid, new ClientSocket(socket, this.clientManager, uuid, this.serverUuid));
     }
 
     protected onError(error: Error) {

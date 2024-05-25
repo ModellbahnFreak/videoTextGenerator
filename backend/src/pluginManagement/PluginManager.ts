@@ -2,7 +2,8 @@ import type { BackendPlugin } from "@videotextgenerator/api";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as url from "url";
-import { BackendAPI } from "./controller/BackendAPI.js";
+import { BackendAPI } from "./BackendAPI.js";
+import { DataKeyManager } from "../data/DataKeyManager.js";
 
 export interface PluginWithMetadata {
     plugin: BackendPlugin;
@@ -14,10 +15,12 @@ export class PluginManager {
 
     protected readonly pluginsByUuid: Map<string, PluginWithMetadata> = new Map();
 
-    constructor() { }
+    constructor(
+        protected readonly dataKeyManager: DataKeyManager
+    ) { }
 
     protected createApiFor(plugin: BackendPlugin): BackendAPI {
-        return new BackendAPI(plugin.uuid);
+        return new BackendAPI(plugin.uuid, this.dataKeyManager);
     }
 
     async loadPlugins(): Promise<void> {

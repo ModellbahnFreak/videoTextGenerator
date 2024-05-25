@@ -1,10 +1,8 @@
 import WebSocket from "ws";
-import type { WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
-import { Client } from "../model/Client.js";
-import { BackendDataKey } from "./BackendDataKey.js";
-import { ClientRepository, clientRepository } from "../repository/ClientRepository.js";
+import type { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
+import { BackendDataKey } from "../data/BackendDataKey.js";
 import { BackendClient } from "./BackendClient.js";
-import { SocketManager } from "./SocketManager.js";
+import { ClientManager } from "./ClientManager.js";
 
 export class ClientSocket {
 
@@ -12,7 +10,7 @@ export class ClientSocket {
 
     constructor(
         protected readonly socket: WebSocket,
-        protected readonly manager: SocketManager,
+        protected readonly manager: ClientManager,
         public readonly uuid: string,
         protected readonly serverUuid: string,
     ) {
@@ -32,15 +30,27 @@ export class ClientSocket {
         }
         const json: WebsocketMessage = JSON.parse(data.toString("utf-8"));
         if (json.type == "login") {
-            this.manager.clientManager.loginClient(this, json as WebsocketLoginMessage);
+            this.manager.loginClient(this, json as WebsocketLoginMessage);
+            return;
         } else if (this.client === undefined) {
-            this.manager.clientManager.loginClient(this);
+            this.manager.loginClient(this);
+        }
+        if (!this.client) {
+            const err: WebsocketErrorMessage = {
+                type: "error",
+                message: "Not logged in and could not auto-login. Ignoring request.",
+                relatesTo: json
+            }
+            this.send(err);
+            return;
         }
         switch (json.type) {
-            case "dataKey":
-                await BackendDataKey.received(json as WebsocketDataKeyMessage, this.client);
+            case "dataKeyRequest":
+                const dataKeyReqMsg = json as WebsocketDataKeyRequestMessage;
+                this.manager.dataKeyManager.for(dataKeyReqMsg.topic, dataKeyReqMsg.dataKey)
                 break;
         }
+        await this.client.onMessage(json);
     }
 
     protected onError(error: Error) {
