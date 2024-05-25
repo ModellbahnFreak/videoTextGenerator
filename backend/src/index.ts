@@ -44,6 +44,10 @@ async function main() {
     const app = express();
     const httpServer = http.createServer(app);
     app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
+    app.get("*", (req, res, next) => {
+        req.url = "/";
+        express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist"))(req, res, next);
+    })
 
     const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository, serverClient);
 
