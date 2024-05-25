@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import '@mdi/font/css/materialdesignicons.css' // If icons are required in the graphic views, comment out this line and uncomment the equivalent line in @/vuePlugins/vuetify.ts
 import { ref } from 'vue';
 import { defineAsyncComponent, type AsyncComponentLoader } from 'vue';
 import type { SocketsManager } from "@/backend/SocketsManager";

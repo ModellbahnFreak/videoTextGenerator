@@ -1,12 +1,10 @@
 import type { APIBase, DataKey } from "@videotextgenerator/api";
 import type { useDataKeyStore } from "./vuePlugins/stores/dataKey";
-import type { SocketsManager } from "./backend/SocketsManager";
 
 export class FrontendAPI implements APIBase {
     constructor(
         protected readonly pluginUuid: string,
         protected readonly dataKeyStore: ReturnType<typeof useDataKeyStore>,
-        protected readonly socketsManager: SocketsManager,
     ) {
 
     }
