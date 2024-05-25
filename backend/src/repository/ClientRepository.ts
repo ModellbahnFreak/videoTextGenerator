@@ -1,6 +1,7 @@
 import { Equal, In, IsNull, Or, Repository } from "typeorm";
 import dataSource from "../dataSource.js";
 import { Client, ClientType } from "../model/Client.js";
+import { DataKey } from "../model/DataKey.js";
 
 export interface ClientRepository extends Repository<Client> {
     loginClient(token?: string): Promise<Client | undefined>;
@@ -49,15 +50,24 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
     },
     async cleanup(): Promise<void> {
         await this.manager.transaction(async manager => {
-            const allUnusedClientIds = (await manager.find(Client, {
+            const clientsWithoutConfig = (await manager.find(Client, {
                 select: { uuid: true },
                 where: {
                     type: ClientType.CLIENT,
-                    config: Or(IsNull(), Equal({}))
+                    config: Or(IsNull(), Equal({})),
                 }
             })).map(c => c.uuid);
-            console.log(`Found ${allUnusedClientIds.length} propably not needed clients. Cleaning up:\n\t${allUnusedClientIds.join("\n\t")}`);
-            await manager.delete(Client, allUnusedClientIds);
+
+            const allUnusedClientIds = (await Promise.all(
+                clientsWithoutConfig.map(async uuid => ({ uuid, dataKeys: await manager.countBy(DataKey, { createdBy: { uuid } }) }))
+            ))
+                .filter(c => c.dataKeys <= 0)
+                .map(c => c.uuid);
+
+            if (allUnusedClientIds.length > 0) {
+                console.log(`Found ${allUnusedClientIds.length} propably not needed clients. Cleaning up:\n\t${allUnusedClientIds.join("\n\t")}`);
+                await manager.delete(Client, allUnusedClientIds);
+            }
             return;
         });
     },
