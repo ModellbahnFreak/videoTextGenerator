@@ -6,4 +6,6 @@ export interface DataKey<T> {
     set(newValue: T): Promise<void>;
     on(handler: ROConsumer<T>): void;
     off(handler: ROConsumer<T>): void;
+    getKey(): string;
+    getTopic(): string;
 }

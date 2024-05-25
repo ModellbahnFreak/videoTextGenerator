@@ -89,5 +89,10 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     get topic(): string {
         return this.dataKey.topicIdOrName;
     }
-
+    getKey(): string {
+        return this.dataKey.key;
+    }
+    getTopic(): string {
+        return this.dataKey.topicIdOrName;
+    }
 }

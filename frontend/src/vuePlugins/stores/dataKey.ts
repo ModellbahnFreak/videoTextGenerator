@@ -71,9 +71,14 @@ export const useDataKeyStore = defineStore('dataKey', () => {
                     off(handler: ROConsumer<T>): void {
                         removeListener(topic, dataKey, handler as ROConsumer<unknown>);
                     },
+                    getKey(): string {
+                        return dataKey;
+                    },
+                    getTopic(): string {
+                        return topic;
+                    }
                 });
             Object.assign(dataKeys[topic], { [dataKey]: comp });
-            console.log(comp, dataKeys);
 
             socketsManager.value?.dataKeyRequest(topic, dataKey).then(value => {
                 setDataKeyValue(topic, dataKey, value, false);
