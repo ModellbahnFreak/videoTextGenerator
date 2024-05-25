@@ -30,10 +30,6 @@ export class Client {
     @PrimaryColumn()
     public readonly uuid: string;
 
-    @ManyToMany(() => Topic)
-    @JoinTable()
-    public topicSubscriptions: Promise<Topic[]> = Promise.resolve([]);
-
     @Column({ type: "simple-json", nullable: true })
     public config?: any | null;
 

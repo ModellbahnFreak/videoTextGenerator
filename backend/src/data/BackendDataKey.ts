@@ -62,7 +62,9 @@ export class BackendDataKey<T> implements IDatakKey<T> {
             this.dataKey.version = version;
             this.dataKey.value = value;
             this.dataKey.createdBy = Promise.resolve(fromClient);
-            this.dataKey = await dataKeyRepository.save(this.dataKey);
+            dataKeyRepository.save(this.dataKey).then(newDataKey => {
+                this.dataKey = newDataKey;
+            });
             this.callListeners();
             return;
         }

@@ -1,11 +1,12 @@
 import { ClientSocket } from "./Socket.js";
 import { Client } from "../model/Client.js"
 import { ClientRepository } from "../repository/ClientRepository.js";
-import { WebsocketDataKeyMessage, WebsocketEventMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
+import { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { ClientManager } from "./ClientManager.js";
 
 export class BackendClient {
     protected readonly sockets: Map<string, ClientSocket> = new Map();
+    protected readonly subscribedTopics: Map<string, boolean /* Todo: replace with instance of Topic for permission check */> = new Map();
 
     constructor(
         protected client: Client,
@@ -36,8 +37,7 @@ export class BackendClient {
     }
 
     async dataKey(topic: string, dataKey: string, value: unknown, version: number) {
-        await this.reloadClient();
-        if (!(await this.client.topicSubscriptions).map(topic => topic.idOrName).includes(topic)) {
+        if (!this.subscribedTopics.has(topic)) {
             return;
         }
         const dataKeyMsg: WebsocketDataKeyMessage = {
@@ -50,8 +50,7 @@ export class BackendClient {
     }
 
     async event(topic: string, event: string, payload: unknown, evtUuid: string) {
-        await this.reloadClient();
-        if (!(await this.client.topicSubscriptions).map(topic => topic.idOrName).includes(topic)) {
+        if (!this.subscribedTopics.has(topic)) {
             return;
         }
         const eventMsg: WebsocketEventMessage = {
@@ -65,20 +64,23 @@ export class BackendClient {
 
     async onMessage(msg: WebsocketMessage) {
         switch (msg.type) {
+            case "dataKeyRequest":
+                const dataKeyReqMsg = msg as WebsocketDataKeyRequestMessage;
+                this.subscribedTopics.set(dataKeyReqMsg.topic, true);
+                break;
             case "dataKey":
                 const dataKeyMsg = msg as WebsocketDataKeyMessage;
-                this.client = await this.manager.clientRepository.addSubscription(this.client, dataKeyMsg.topic);
+                this.subscribedTopics.set(dataKeyMsg.topic, true);
                 await this.manager.dataKeyManager.received(dataKeyMsg.topic, dataKeyMsg.dataKey, dataKeyMsg.value, dataKeyMsg.version, this.client);
                 break;
             case "event":
                 const eventMsg = msg as WebsocketEventMessage;
-                this.client = await this.manager.clientRepository.addSubscription(this.client, eventMsg.topic);
+                this.subscribedTopics.set(eventMsg.topic, true);
                 //TODO: Implement events
                 break;
             case "subscribe":
                 const subscribeMsg = msg as WebsocketSubscribeMessage;
-                await this.reloadClient();
-                this.client = await this.manager.clientRepository.addSubscription(this.client, subscribeMsg.topics);
+                subscribeMsg.topics.forEach(topic => this.subscribedTopics.set(topic, true));
                 break;
         }
     }

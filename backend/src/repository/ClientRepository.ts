@@ -8,8 +8,6 @@ export interface ClientRepository extends Repository<Client> {
     loginClient(token?: string): Promise<Client | undefined>;
     createServerClient(uuid: string): Promise<Client>;
     cleanup(): Promise<void>;
-    addSubscription(client: Client, topic: string | string[]): Promise<Client>;
-    removeSubscription(client: Client, topic: string | string[]): Promise<Client>;
 }
 
 export const clientRepository: ClientRepository = dataSource.getRepository(Client).extend({
@@ -72,54 +70,6 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
                 await manager.delete(Client, allUnusedClientIds);
             }
             return;
-        });
-    },
-    async addSubscription(client: Client, topics: string | string[]): Promise<Client> {
-        return this.manager.transaction(async manager => {
-            async function getOrCreateTopic(topicStr: string): Promise<Topic> {
-                let topic = await manager.findOneBy(Topic, { idOrName: topicStr });
-                if (!topic) {
-                    topic = new Topic();
-                    topic.idOrName = topicStr;
-                    topic = await manager.save(topic);
-                }
-                return topic;
-            }
-
-            const subsciptions = await client.topicSubscriptions;
-            const subscribedTopics = subsciptions.map(topic => topic.idOrName);
-            if (topics instanceof Array) {
-                const toSubscribe = topics.filter(topic => !subscribedTopics.includes(topic));
-                if (toSubscribe.length > 0) {
-                    await Promise.all(toSubscribe.map(async topic => subsciptions.push(await getOrCreateTopic(topic))));
-                    return manager.save(client);
-                }
-            } else {
-                if (!subscribedTopics.includes(topics)) {
-                    subsciptions.push(await getOrCreateTopic(topics));
-                    return manager.save(client);
-                }
-            }
-            return client;
-        });
-    },
-    async removeSubscription(client: Client, topics: string | string[]): Promise<Client> {
-        return this.manager.transaction(async manager => {
-            const subsciptions = await client.topicSubscriptions;
-            if (topics instanceof Array) {
-                const filtered = subsciptions.filter(topic => !topics.includes(topic.idOrName));
-                if (filtered.length < subsciptions.length) {
-                    client.topicSubscriptions = Promise.resolve(filtered);
-                    return manager.save(client);
-                }
-            } else {
-                const filtered = subsciptions.filter(topic => topic.idOrName != topics);
-                if (filtered.length < subsciptions.length) {
-                    client.topicSubscriptions = Promise.resolve(filtered);
-                    return manager.save(client);
-                }
-            }
-            return client;
         });
     },
 } as ClientRepository);
