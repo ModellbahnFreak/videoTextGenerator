@@ -54,7 +54,7 @@ async function main() {
         {
             server: httpServer,
         });
-
+    dataKeyManager.on(wsManager.dataKey);
 
     console.log(`Starting backend server on port ${port}`)
     httpServer.listen(port);

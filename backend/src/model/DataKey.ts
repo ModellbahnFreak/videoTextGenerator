@@ -23,6 +23,6 @@ export class DataKey {
     @Column()
     version: number = -1;
 
-    @ManyToOne(() => Client)
+    @ManyToOne(() => Client, client => client.createdDataKeys)
     createdBy: Promise<Client | null> = Promise.resolve(null);
 }

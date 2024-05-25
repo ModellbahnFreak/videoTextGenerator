@@ -1,7 +1,8 @@
 import { Topic } from "./Topic.js";
 import { ClientSocket } from "../socket/Socket.js";
-import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
 import { uuidGenerator } from "../utils.js";
+import { DataKey } from "./DataKey.js";
 
 export enum ClientType {
     SERVER = "server",
@@ -31,6 +32,9 @@ export class Client {
 
     @Column()
     public type: ClientType = ClientType.CLIENT;
+
+    @OneToMany(() => DataKey, dataKey => dataKey.createdBy)
+    public createdDataKeys: Promise<DataKey[]> = Promise.resolve([]);
 
     compare(to: Client): number {
         if (this === to || this.uuid == to.uuid) {

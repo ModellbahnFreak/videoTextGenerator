@@ -1,4 +1,4 @@
-import type { DataKey as IDatakKey, ROConsumer, WebsocketDataKeyMessage } from "@videotextgenerator/api";
+import type { DataKeyListener, DataKey as IDatakKey, ROConsumer } from "@videotextgenerator/api";
 import { DataKey } from "../model/DataKey.js";
 import { Client } from "../model/Client.js";
 import { dataKeyRepository } from "../repository/DataKeyRepository.js";
@@ -7,7 +7,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
 
     protected dataKey: DataKey;
 
-    protected readonly listeners: Map<ROConsumer<T>, boolean> = new Map();
+    protected readonly listeners: Map<ROConsumer<T> | DataKeyListener, boolean> = new Map();
 
     constructor(dataKey: DataKey) {
         this.dataKey = dataKey;
@@ -30,17 +30,24 @@ export class BackendDataKey<T> implements IDatakKey<T> {
         this.callListeners(newValue);
     }
 
-    on(handler: ROConsumer<T>): void {
-        this.listeners.set(handler, true);
+    on(handler: ROConsumer<T> | DataKeyListener, once: boolean = false): void {
+        this.listeners.set(handler, once);
     }
-    off(handler: ROConsumer<T>): void {
+    off(handler: ROConsumer<T> | DataKeyListener): void {
         this.listeners.delete(handler);
     }
     protected callListeners(value?: T) {
         console.debug(`DataKey ${this.dataKey.topicIdOrName}/d-${this.dataKey.key} changed to version ${this.dataKey.version}`);
         const newValue = value ?? this.value;
-        for (const [listener, _] of this.listeners) {
-            listener(newValue);
+        for (const [listener, once] of this.listeners) {
+            if (listener.length == 1) {
+                (listener as ROConsumer<T>)(newValue);
+            } else {
+                (listener as DataKeyListener)(this.topic, this.key, this.value, this.currentVersion);
+            }
+            if (once) {
+                this.listeners.delete(listener);
+            }
         }
     }
 

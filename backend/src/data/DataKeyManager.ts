@@ -10,7 +10,6 @@ export class DataKeyManager {
     protected readonly instances: BackendDataKey<unknown>[] = [];
 
     protected readonly dataKeyListeners: Map<DataKeyListener, ListenerOptions> = new Map();
-    protected readonly eventListeners: Map<EventListener, ListenerOptions> = new Map();
 
     constructor(
         protected readonly topicRepository: TopicRepository,
@@ -44,6 +43,11 @@ export class DataKeyManager {
                 dataKeyInstance = await this.dataKeyRepository.save(dataKeyInstance);
             }
             instance = new BackendDataKey(dataKeyInstance);
+            for (const [listener, options] of this.dataKeyListeners) {
+                if ((!options.topic || options.topic == topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKey)) {
+                    instance.on(listener, options.once);
+                }
+            }
             this.instances.push(instance);
         }
         return instance as BackendDataKey<T>;
@@ -58,35 +62,26 @@ export class DataKeyManager {
         return true;
     }
 
-    on(event: "dataKey", listener: DataKeyListener, options?: Partial<ListenerOptions>): void;
-    on(event: "event", listener: EventListener, options?: Partial<ListenerOptions>): void;
-    on(event: string, listener: DataKeyListener | EventListener, options: Partial<ListenerOptions> = {}): void {
+    on(listener: DataKeyListener, options: Partial<ListenerOptions> = {}): void {
         const optionsWithDefault: ListenerOptions = {
             once: false,
             topic: undefined,
             dataKeyOrEvent: undefined,
             ...options
         }
-        switch (event) {
-            case "dataKey":
-                this.dataKeyListeners.set(listener as DataKeyListener, optionsWithDefault);
-                break;
-            case "event":
-                this.eventListeners.set(listener as EventListener, optionsWithDefault);
-                break;
+        this.dataKeyListeners.set(listener as DataKeyListener, optionsWithDefault);
+        for (const instance of this.instances) {
+            if ((!options.topic || options.topic == instance.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == instance.key)) {
+                instance.on(listener, options.once);
+            }
         }
+
     }
 
-    off(event: "dataKey", listener: DataKeyListener): void;
-    off(event: "event", listener: EventListener): void;
-    off(event: string, listener: DataKeyListener | EventListener): void {
-        switch (event) {
-            case "dataKey":
-                this.dataKeyListeners.delete(listener as DataKeyListener);
-                break;
-            case "event":
-                this.eventListeners.delete(listener as EventListener);
-                break;
+    off(listener: DataKeyListener): void {
+        this.dataKeyListeners.delete(listener as DataKeyListener);
+        for (const instance of this.instances) {
+            instance.off(listener);
         }
     }
 }

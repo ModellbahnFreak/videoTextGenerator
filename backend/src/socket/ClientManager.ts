@@ -45,11 +45,11 @@ export class ClientManager {
         socket.send(clientConfig);
     }
 
-    async dataKey(topic: string, dataKey: string, value: unknown, version: number): Promise<void> {
+    async dataKey(topic: string, dataKey: string, value: unknown, version: number = -1): Promise<void> {
         await Promise.all([...this.clients.values()].map(c => c.dataKey(topic, dataKey, value, version)));
     }
 
-    async event(topic: string, event: string, payload: unknown, evtUuid: string) {
+    async event(topic: string, event: string, payload: unknown, evtUuid: string = "") {
         await Promise.all([...this.clients.values()].map(c => c.event(topic, event, payload, evtUuid)));
     }
 
