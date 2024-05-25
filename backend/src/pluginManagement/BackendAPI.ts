@@ -11,7 +11,7 @@ export class BackendAPI implements APIBase {
 
     }
 
-    async getDataKey<T>(keyName: string, topic?: string | undefined): Promise<IDataKey<T>> {
+    async getDataKey<T>(keyName: string, topic?: string | undefined): Promise<IDataKey<T> | null> {
         console.log("API called", keyName, topic ?? this.pluginUuid);
         return this.dataKeyManager.for<T>(topic ?? this.pluginUuid, keyName);
     }

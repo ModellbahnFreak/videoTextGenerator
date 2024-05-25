@@ -19,7 +19,7 @@ async function setValue() {
     try {
         valueParsed = JSON.parse(valueParsed);
     } catch { }
-    (await api.getDataKey(dataKeyStr, topicStr)).set(valueParsed);
+    (await api.getDataKey(dataKeyStr, topicStr))?.set(valueParsed);
 }
 </script>
 

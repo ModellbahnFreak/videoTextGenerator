@@ -11,7 +11,7 @@ export class FrontendAPI implements APIBase {
 
     }
 
-    async getDataKey<T>(keyName: string, topic?: string | undefined): Promise<DataKey<T>> {
+    async getDataKey<T>(keyName: string, topic?: string | undefined): Promise<DataKey<T> | null> {
         console.log("API called", keyName, topic ?? this.pluginUuid);
         return this.dataKeyStore.dataKeyFor<T>(topic ?? this.pluginUuid, keyName);
     }

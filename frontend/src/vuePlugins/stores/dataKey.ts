@@ -1,5 +1,5 @@
-import type { DataKeyListener, SocketsManager } from "@/backend/SocketsManager";
-import type { DataKey, ROConsumer } from "@videotextgenerator/api";
+import type { SocketsManager } from "@/backend/SocketsManager";
+import type { DataKey, DataKeyListener, ROConsumer } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
 import { computed, ref, type Ref, type WritableComputedRef } from "vue";
 
@@ -50,6 +50,7 @@ export const useDataKeyStore = defineStore('dataKey', () => {
     });
 
     async function dataKeyFor<T>(topic: string, dataKey: string): Promise<DataKey<T>> {
+        // todo: check permission to get datakey
         if (!dataKeys[topic]) {
             Object.assign(dataKeys, { [topic]: {} });
         }
