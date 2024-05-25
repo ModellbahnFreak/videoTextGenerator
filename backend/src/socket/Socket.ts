@@ -1,6 +1,5 @@
 import WebSocket from "ws";
 import type { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
-import { BackendDataKey } from "../data/BackendDataKey.js";
 import { BackendClient } from "./BackendClient.js";
 import { ClientManager } from "./ClientManager.js";
 
@@ -47,7 +46,21 @@ export class ClientSocket {
         switch (json.type) {
             case "dataKeyRequest":
                 const dataKeyReqMsg = json as WebsocketDataKeyRequestMessage;
-                this.manager.dataKeyManager.for(dataKeyReqMsg.topic, dataKeyReqMsg.dataKey)
+                const dataKey = await this.manager.dataKeyManager.for(dataKeyReqMsg.topic, dataKeyReqMsg.dataKey, this.client.clientModel);
+                if (!dataKey) {
+                    const err: WebsocketErrorMessage = {
+                        type: "error",
+                        message: `Not allowed to access dataKey ${dataKeyReqMsg.topic}/d-${dataKeyReqMsg.dataKey}`,
+                        relatesTo: json
+                    }
+                    this.send(err);
+                    return;
+                }
+                const dataKeyReqReply: WebsocketDataKeyMessage = {
+                    type: "dataKey",
+                    topic: dataKey.topic, dataKey: dataKey.key, value: dataKey.value, version: dataKey.currentVersion
+                }
+                this.send(dataKeyReqReply);
                 break;
         }
         await this.client.onMessage(json);

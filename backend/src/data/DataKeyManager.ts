@@ -20,7 +20,7 @@ export class DataKeyManager {
 
     }
 
-    public async for<T>(topic: string, dataKey: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<T>> {
+    public async for<T>(topic: string, dataKey: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<T> | null> {
         //todo: requesting client can be used for permission check
         if (topic == "" || dataKey == "") {
             throw new Error("Illegal Arguments. Need topic and data key");
@@ -49,8 +49,13 @@ export class DataKeyManager {
         return instance as BackendDataKey<T>;
     }
 
-    public async received(topic: string, dataKey: string, value: unknown, version: number, fromClient: Client): Promise<void> {
-        return (await this.for(topic, dataKey, fromClient)).received(value, version, fromClient);
+    public async received(topic: string, dataKey: string, value: unknown, version: number, fromClient: Client): Promise<boolean> {
+        const dataKeyInstance = await this.for(topic, dataKey, fromClient);
+        if (!dataKeyInstance) {
+            return false;
+        }
+        await dataKeyInstance.received(value, version, fromClient);
+        return true;
     }
 
     on(event: "dataKey", listener: DataKeyListener, options?: Partial<ListenerOptions>): void;

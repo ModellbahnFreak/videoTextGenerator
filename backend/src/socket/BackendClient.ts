@@ -72,6 +72,10 @@ export class BackendClient {
         }
     }
 
+    get clientModel(): Client {
+        return this.client;
+    }
+
     get uuid(): string {
         return this.client.uuid;
     }
