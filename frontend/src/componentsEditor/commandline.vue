@@ -12,8 +12,6 @@ let currDataKey = shallowRef({ dataKey: await api.getDataKey(dataKey.value, topi
 
 async function setValue() {
     currDataKey.value = { dataKey: await api.getDataKey(dataKey.value, topic.value) };
-    const topicStr = topic.value;
-    const dataKeyStr = dataKey.value;
     let valueParsed = valueStr.value;
     try {
         valueParsed = JSON.parse(valueParsed);

@@ -25,6 +25,7 @@ export class SocketsManager implements VuePlugin<[]> {
     install(app: App<any>) {
         this.closePrevoiusManagers();
         app.config.globalProperties.$socketsManager = this;
+        app.provide("socketsManager", this);
         this.startSockets();
     }
 

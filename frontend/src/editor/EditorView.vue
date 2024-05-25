@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { defineAsyncComponent, type AsyncComponentLoader } from 'vue';
-import type { PluginData } from "@videotextgenerator/api";
+import type { SocketsManager } from "@/backend/SocketsManager";
 import { computed } from 'vue';
 import { useComponentStore, type ComponentMetadata } from "@/vuePlugins/stores/component"
 import { loadAllEditorComponents } from '@/PluginManager';
+import { inject } from 'vue';
 
 const componentStore = useComponentStore();
 const components = loadAllEditorComponents();
 
 let panelToOpen = ref(-1);
+
+const isConnected = ref(true);
+const socketsManager = inject("socketsManager") as SocketsManager;
+setInterval(() => {
+    isConnected.value = socketsManager.numOpenSockets > 0;
+}, 1000);
 
 function openSlectedPlugin() {
     if (panelToOpen.value == -1) {
@@ -33,7 +40,7 @@ const editorUnopenedAsItems = computed(() => {
 <template>
     <v-app>
         <v-main class="pa-2">
-            <h1>Editor<span v-if="$socketsManager.numOpenSockets <= 0"> - NOT CONNECTED!</span></h1>
+            <h1>Editor<span v-if="!isConnected"> - NOT CONNECTED!</span></h1>
             <v-row>
                 <v-col cols="3" class="pr-0">
                     <v-autocomplete label="Panel" density="compact" v-model="panelToOpen" :items="editorUnopenedAsItems"
