@@ -4,33 +4,58 @@ import * as http from "http";
 import express from "express"
 import { WebSocketServer } from "ws";
 import dataSource from "./dataSource.js";
-import { SocketManager } from "./controller/SocketManager.js";
+import { SocketManager } from "./socket/SocketManager.js";
 import { uuidGenerator } from "./utils.js";
+import { clientRepository } from "./repository/ClientRepository.js";
+import { DataKeyManager } from "./data/DataKeyManager.js";
+import { topicRepository } from "./repository/TopicRepository.js";
+import { dataKeyRepository } from "./repository/DataKeyRepository.js";
 
 dotenv.config({});
 
 console.debug(`Starting in ${process.env.NODE_ENV} mode`);
 
+async function generateUuidAndPort(): Promise<{ uuid: string, port: number }> {
+    const crypto = await import("crypto");
+    const hash = crypto.createHash("md5").update(import.meta.dirname).digest("hex").toLowerCase();
+
+    let port = parseInt(process.env.VIDEOTEXTGENERATOR_SERVER_PORT ?? "NaN");
+    if (!isFinite(port) || port <= 0 || port >= 65536) {
+        port = (parseInt(hash.substring(0, 4), 16) % 64512) + 1024;
+    }
+
+    let uuid = process.env.VIDEOTEXTGENERATOR_SERVER_UUID;
+    if (!uuid || !uuid.match(/^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/)) {
+        uuid = `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
+    }
+    return { uuid, port };
+}
+
 async function main() {
+    const { uuid, port } = await generateUuidAndPort();
+    console.log(`Hello! I am videotextgenerator server uuid ${uuid}`);
+
     await dataSource.initialize();
+    await clientRepository.createServerClient(uuid);
+    if (!process.env.VIDEOTEXTGENERATOR_SERVER_NO_CLEANUP) {
+        await clientRepository.cleanup();
+    }
 
     const app = express();
     const httpServer = http.createServer(app);
     app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
 
+    const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository);
+
     const wsManager = new SocketManager(
-        //todo: consistent generation of server uuid
-        uuidGenerator(),
+        uuid,
+        clientRepository,
+        dataKeyManager,
         {
             server: httpServer,
         });
 
-    let port = parseInt(process.env.VIDEOTEXTGENERATOR_SERVER_PORT ?? "NaN");
-    console.log(port);
-    if (!isFinite(port) || port <= 0 || port >= 65536) {
-        const crypto = await import("crypto");
-        port = (parseInt(crypto.createHash("md5").update(import.meta.dirname).digest("hex").substring(0, 4), 16) % 64512) + 1024;
-    }
+
     console.log(`Starting backend server on port ${port}`)
     httpServer.listen(port);
 }
