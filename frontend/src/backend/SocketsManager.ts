@@ -1,13 +1,9 @@
 import type { useClientConfigStore } from "@/vuePlugins/stores/clientConfig";
 import { SocketToBackend } from "./SocketToBackend";
 import type { App, ObjectPlugin as VuePlugin } from "vue";
-import type { FrontendClientConfig, WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage } from "@videotextgenerator/api";
+import type { DataKeyListener, EventListener, FrontendClientConfig, ListenerOptions, WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage } from "@videotextgenerator/api";
 import { VersionManager } from "./VersionManager";
 import type { useDataKeyStore } from "@/vuePlugins/stores/dataKey";
-
-export type DataKeyListener = (topic: string, dataKey: string, payload: unknown, version?: number) => void;
-export type EventListener = (topic: string, event: string, payload: unknown, eventUuid?: string) => void;
-export type ListenerOptions = { once: boolean, topic: string | undefined, dataKeyOrEvent: string | undefined }
 
 export class SocketsManager implements VuePlugin<[]> {
     protected readonly sockets: SocketToBackend[] = [];
