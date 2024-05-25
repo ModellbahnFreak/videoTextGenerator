@@ -2,6 +2,7 @@ import { IncomingMessage } from "http";
 import { ServerOptions, WebSocket, WebSocketServer } from "ws";
 import { ClientSocket } from "./ClientSocket.js";
 import { uuidGenerator } from "../utils.js";
+import { ClientManager } from "./CientManager.js";
 
 /**
  * Class responsible for managing the WebSocketServer
@@ -15,6 +16,7 @@ export class SocketManager {
 
     protected clientSockets: Map<string, ClientSocket> = new Map();
     protected closedWatcher: ReturnType<typeof setInterval>;
+    readonly clientManager: ClientManager;
 
     constructor(
         protected readonly serverUuid: string,
@@ -33,8 +35,9 @@ export class SocketManager {
         this.server.on("error", this.onError.bind(this));
 
         this.closedWatcher = setInterval(this.checkOpenSockets.bind(this), 1000);
-
         console.log(`Waiting for WebSocket connections...`);
+
+        this.clientManager = new ClientManager();
     }
 
     protected onConnection(socket: WebSocket, request: IncomingMessage) {

@@ -2,14 +2,17 @@ import WebSocket from "ws";
 import type { WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
 import { Client } from "../model/Client.js";
 import { BackendDataKey } from "./BackendDataKey.js";
-import { clientRepository } from "../repository/ClientRepository.js";
+import { ClientRepository, clientRepository } from "../repository/ClientRepository.js";
+import { BackendClient } from "./BackendClient.js";
+import { SocketManager } from "./SocketManager.js";
 
 export class ClientSocket {
 
-    protected client: Client | undefined;
+    public client: BackendClient | undefined;
 
     constructor(
         protected readonly socket: WebSocket,
+        protected readonly manager: SocketManager,
         public readonly uuid: string,
         protected readonly serverUuid: string,
     ) {
@@ -29,9 +32,9 @@ export class ClientSocket {
         }
         const json: WebsocketMessage = JSON.parse(data.toString("utf-8"));
         if (json.type == "login") {
-            this.loginClient(json as WebsocketLoginMessage);
+            this.manager.clientManager.loginClient(this, json as WebsocketLoginMessage);
         } else if (this.client === undefined) {
-            this.loginClient();
+            this.manager.clientManager.loginClient(this);
         }
         switch (json.type) {
             case "dataKey":
@@ -48,28 +51,7 @@ export class ClientSocket {
         console.log(`Socket to client ${this.client?.uuid} closed with ${code}:${reason.toString("utf-8")}`);
     }
 
-    protected async loginClient(msg?: WebsocketLoginMessage) {
-        let newClient = await clientRepository.loginClient(msg?.token);
-        if (!newClient) {
-            const err: WebsocketErrorMessage = {
-                type: "error",
-                message: "Login error. Will use last login or create new one",
-                relatesTo: msg
-            }
-            this.send(err);
-            return;
-        }
-        this.client = newClient;
-        const clientConfig: WebsocketClientConfigMessage = {
-            type: "clientConfig",
-            uuid: newClient.uuid,
-            serverUuid: this.serverUuid,
-            config: {},
-        };
-        this.send(clientConfig);
-    }
-
-    protected send(msg: WebsocketMessage) {
+    send(msg: WebsocketMessage) {
         this.socket.send(JSON.stringify(msg));
     }
 
