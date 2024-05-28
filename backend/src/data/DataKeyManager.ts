@@ -62,6 +62,7 @@ export class DataKeyManager {
         return true;
     }
 
+    // Todo: Fix once not removing on all data keys if triggered on one
     on(listener: DataKeyListener, options: Partial<ListenerOptions> = {}): void {
         const optionsWithDefault: ListenerOptions = {
             once: false,
@@ -69,7 +70,7 @@ export class DataKeyManager {
             dataKeyOrEvent: undefined,
             ...options
         }
-        this.dataKeyListeners.set(listener as DataKeyListener, optionsWithDefault);
+        this.dataKeyListeners.set(listener, optionsWithDefault);
         for (const instance of this.instances) {
             if ((!options.topic || options.topic == instance.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == instance.key)) {
                 instance.on(listener, options.once);
@@ -79,7 +80,7 @@ export class DataKeyManager {
     }
 
     off(listener: DataKeyListener): void {
-        this.dataKeyListeners.delete(listener as DataKeyListener);
+        this.dataKeyListeners.delete(listener);
         for (const instance of this.instances) {
             instance.off(listener);
         }
