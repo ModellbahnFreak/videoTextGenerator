@@ -10,6 +10,7 @@ import { clientRepository } from "./repository/ClientRepository.js";
 import { DataKeyManager } from "./data/DataKeyManager.js";
 import { topicRepository } from "./repository/TopicRepository.js";
 import { dataKeyRepository } from "./repository/DataKeyRepository.js";
+import { EventManager } from "./data/EventManager.js";
 
 dotenv.config({});
 
@@ -50,15 +51,18 @@ async function main() {
     })
 
     const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository, serverClient);
+    const eventManager = new EventManager();
 
     const wsManager = new SocketManager(
         uuid,
         clientRepository,
         dataKeyManager,
+        eventManager,
         {
             server: httpServer,
         });
     dataKeyManager.on(wsManager.dataKey);
+    eventManager.on(wsManager.event);
 
     console.log(`Starting backend server on port ${port}`)
     httpServer.listen(port);

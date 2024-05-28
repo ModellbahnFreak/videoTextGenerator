@@ -4,8 +4,9 @@ import { FrontendAPI } from "./FrontendAPI";
 import { defineAsyncComponent, type AsyncComponentLoader } from "vue";
 import { useComponentStore } from "./vuePlugins/stores/component";
 import { useDataKeyStore } from "./vuePlugins/stores/dataKey";
+import type { EventManager } from "./backend/EventManager";
 
-export async function loadPlugins(): Promise<void> {
+export async function loadPlugins(eventManager: EventManager): Promise<void> {
 
     const pluginStore = usePluginStore();
     const dataKeyStore = useDataKeyStore();
@@ -32,7 +33,7 @@ export async function loadPlugins(): Promise<void> {
                     console.error(pluginPath + " is not a plugin or uuid is invalid. Ignoring import.");
                     continue;
                 }
-                pluginStore.addPlugin(folderName, plugin, new FrontendAPI(plugin.uuid, dataKeyStore));
+                pluginStore.addPlugin(folderName, plugin, new FrontendAPI(plugin.uuid, dataKeyStore, eventManager));
             }
         }
     }

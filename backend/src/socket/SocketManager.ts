@@ -5,6 +5,7 @@ import { uuidGenerator } from "../utils.js";
 import { ClientManager } from "./ClientManager.js";
 import { ClientRepository } from "../repository/ClientRepository.js";
 import { DataKeyManager } from "../data/DataKeyManager.js";
+import { EventManager } from "../data/EventManager.js";
 
 /**
  * Class responsible for managing the WebSocketServer
@@ -27,6 +28,7 @@ export class SocketManager {
         protected readonly serverUuid: string,
         clientRepository: ClientRepository,
         dataKeyManager: DataKeyManager,
+        eventManager: EventManager,
         webSocketServerOrOptions?: WebSocketServer | ServerOptions,
     ) {
         if (webSocketServerOrOptions && webSocketServerOrOptions instanceof WebSocketServer) {
@@ -44,7 +46,7 @@ export class SocketManager {
         this.closedWatcher = setInterval(this.checkOpenSockets.bind(this), 1000);
         console.log(`Waiting for WebSocket connections...`);
 
-        this.clientManager = new ClientManager(clientRepository, dataKeyManager, this.serverUuid);
+        this.clientManager = new ClientManager(clientRepository, dataKeyManager, eventManager, this.serverUuid);
         this.dataKey = this.clientManager.dataKey.bind(this.clientManager);
         this.event = this.clientManager.event.bind(this.clientManager);
     }

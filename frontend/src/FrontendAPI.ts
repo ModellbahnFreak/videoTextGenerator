@@ -1,10 +1,12 @@
-import type { APIBase, DataKey } from "@videotextgenerator/api";
+import type { APIBase, DataKey, ROConsumer } from "@videotextgenerator/api";
 import type { useDataKeyStore } from "./vuePlugins/stores/dataKey";
+import type { EventManager } from "./backend/EventManager";
 
 export class FrontendAPI implements APIBase {
     constructor(
         protected readonly pluginUuid: string,
         protected readonly dataKeyStore: ReturnType<typeof useDataKeyStore>,
+        protected readonly eventManager: EventManager
     ) {
 
     }
@@ -14,11 +16,16 @@ export class FrontendAPI implements APIBase {
         return this.dataKeyStore.dataKeyFor<T>(topic ?? this.pluginUuid, keyName);
     }
 
-    on<T>(event: string, listener: (payload: T) => void, topic?: string | undefined): void {
-        throw new Error("Method not implemented.");
+    on<T>(event: string, listener: ROConsumer<T>, topic: string = this.pluginUuid): void {
+        this.eventManager.on(listener as ROConsumer<unknown>, {
+            topic,
+            dataKeyOrEvent: event
+        })
     }
-
-    off<T>(event: string, listener: (payload: T) => void, topic?: string | undefined): void {
-        throw new Error("Method not implemented.");
+    off<T>(event: string, listener: ROConsumer<T>, topic: string = this.pluginUuid): void {
+        this.eventManager.off(listener as ROConsumer<unknown>, {
+            topic,
+            dataKeyOrEvent: event
+        })
     }
 }

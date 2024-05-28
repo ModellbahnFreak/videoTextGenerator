@@ -76,7 +76,7 @@ export class BackendClient {
             case "event":
                 const eventMsg = msg as WebsocketEventMessage;
                 this.subscribedTopics.set(eventMsg.topic, true);
-                //TODO: Implement events
+                await this.manager.eventManager.raise(eventMsg.topic, eventMsg.event, eventMsg.payload, eventMsg.evtUuid);
                 break;
             case "subscribe":
                 const subscribeMsg = msg as WebsocketSubscribeMessage;

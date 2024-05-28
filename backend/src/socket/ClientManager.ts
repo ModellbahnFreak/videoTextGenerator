@@ -3,6 +3,7 @@ import { BackendClient } from "./BackendClient.js";
 import { ClientRepository } from "../repository/ClientRepository.js";
 import { ClientSocket } from "./Socket.js";
 import { DataKeyManager } from "../data/DataKeyManager.js";
+import { EventManager } from "../data/EventManager.js";
 
 export class ClientManager {
     protected readonly clients: Map<string, BackendClient> = new Map();
@@ -10,6 +11,7 @@ export class ClientManager {
     constructor(
         public readonly clientRepository: ClientRepository,
         public readonly dataKeyManager: DataKeyManager,
+        public readonly eventManager: EventManager,
         protected readonly serverUuid: string,
     ) { }
 

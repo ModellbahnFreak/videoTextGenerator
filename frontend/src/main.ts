@@ -8,6 +8,7 @@ import { loadPlugins } from './PluginManager'
 import { useClientConfigStore } from './vuePlugins/stores/clientConfig'
 import { SocketsManager } from './backend/SocketsManager'
 import { useDataKeyStore } from './vuePlugins/stores/dataKey'
+import { EventManager } from './backend/EventManager'
 
 const app = createApp(App)
 const pinia = createPinia();
@@ -15,9 +16,13 @@ const pinia = createPinia();
 app.use(pinia)
 app.use(router)
 app.use(vuetify);
-app.use(new SocketsManager(useClientConfigStore(), useDataKeyStore()))
 
-loadPlugins().then(() => {
+const socketsManager = new SocketsManager(useClientConfigStore(), useDataKeyStore());
+const eventManager = new EventManager();
+socketsManager.on("event", eventManager.raise.bind(eventManager));
+app.use(socketsManager);
+
+loadPlugins(eventManager).then(() => {
     app.mount('#app');
 });
 

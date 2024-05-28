@@ -4,6 +4,7 @@ import type { App, ObjectPlugin as VuePlugin } from "vue";
 import type { DataKeyListener, EventListener, FrontendClientConfig, ListenerOptions, WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage } from "@videotextgenerator/api";
 import { VersionManager } from "./VersionManager";
 import type { useDataKeyStore } from "@/vuePlugins/stores/dataKey";
+import { uuidGenerator } from "@/utils";
 
 export class SocketsManager implements VuePlugin<[]> {
     protected readonly sockets: SocketToBackend[] = [];
