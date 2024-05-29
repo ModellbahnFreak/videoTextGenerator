@@ -13,6 +13,9 @@ export const useDataKeyStore = defineStore('dataKey', () => {
     const socketsManager = ref<SocketsManager | undefined>();
 
     function setDataKeyValue(topic: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
+        if (value === undefined) {
+            value = null;
+        }
         if (sendToServer) {
             socketsManager.value?.dataKey(topic, dataKey, value, getNextDataKeyVersion(topic, dataKey));
         }

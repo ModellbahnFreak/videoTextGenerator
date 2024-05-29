@@ -18,6 +18,9 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     }
 
     async set(newValue: T): Promise<void> {
+        if (newValue === undefined) {
+            newValue = null as T;
+        }
         const reloaded = await dataKeyRepository.findByName(this.dataKey.topicIdOrName, this.dataKey.key);
         if (reloaded) {
             this.dataKey = reloaded;
