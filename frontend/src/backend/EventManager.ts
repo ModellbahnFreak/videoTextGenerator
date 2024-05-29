@@ -4,25 +4,27 @@ import { uuidGenerator } from "../utils.js";
 
 export class EventManager {
 
-    protected readonly eventListeners: Map<string | null, Map<string | null, Map<EventListener | ROConsumer<unknown>, boolean>>> = new Map();
+    protected readonly eventListeners: Map<string | null, Map<string | null, Map<EventListener | ROConsumer<unknown>, ListenerOptions>>> = new Map();
     protected readonly knownEvtUuids: Set<string> = new Set();
 
     constructor() {
 
     }
 
-    protected callListeners(listeners: Map<EventListener | ROConsumer<unknown>, boolean> | undefined, topic: string, event: string, payload: unknown, evtUuid: string) {
+    protected callListeners(
+        listeners: Map<EventListener | ROConsumer<unknown>, ListenerOptions> | undefined,
+        topic: string, event: string, payload: unknown, evtUuid: string
+    ) {
         if (!listeners) {
             return;
         }
-        for (const [listener, once] of listeners) {
+        for (const [listener, options] of listeners) {
             if (listener.length == 1) {
                 (listener as ROConsumer<unknown>)(payload);
             } else {
                 (listener as EventListener)(topic, event, payload, evtUuid);
             }
-            listener(topic, event, payload, evtUuid);
-            if (once) {
+            if (options.once) {
                 listeners.delete(listener);
             }
         }
@@ -31,9 +33,11 @@ export class EventManager {
     async raise(topic: string, event: string, payload: unknown, evtUuid: string = uuidGenerator()): Promise<boolean> {
         //todo: return false on not allowed
         if (this.knownEvtUuids.has(evtUuid)) {
+            console.log(`Event ${evtUuid} was previously raised. Not raising again`);
             return true;
         }
         this.knownEvtUuids.add(evtUuid);
+        console.log(`Raising event ${evtUuid}`);
 
         const specificListeners = this.eventListeners.get(topic)?.get(event);
         this.callListeners(specificListeners, topic, event, payload, evtUuid);
@@ -47,22 +51,26 @@ export class EventManager {
     }
 
     on(listener: EventListener | ROConsumer<unknown>, options: Partial<ListenerOptions> = {}): void {
-        const topic = options.topic ?? null;
-        const event = options.dataKeyOrEvent ?? null;
+        const optionsWithDefault: ListenerOptions = {
+            once: false,
+            topic: undefined,
+            dataKeyOrEvent: undefined,
+            ...options
+        }
 
-        let topicListeners = this.eventListeners.get(topic);
+        let topicListeners = this.eventListeners.get(optionsWithDefault.topic ?? null);
         if (!topicListeners) {
             topicListeners = new Map();
-            this.eventListeners.set(topic, topicListeners)
+            this.eventListeners.set(optionsWithDefault.topic ?? null, topicListeners)
         }
 
-        let eventSpecificListeners = topicListeners.get(event);
+        let eventSpecificListeners = topicListeners.get(optionsWithDefault.dataKeyOrEvent ?? null);
         if (!eventSpecificListeners) {
             eventSpecificListeners = new Map();
-            topicListeners.set(event, eventSpecificListeners);
+            topicListeners.set(optionsWithDefault.dataKeyOrEvent ?? null, eventSpecificListeners);
         }
 
-        eventSpecificListeners.set(listener, !!options.once);
+        eventSpecificListeners.set(listener, optionsWithDefault);
     }
 
     off(listener: EventListener | ROConsumer<unknown>, options: Partial<ListenerOptions> | undefined): void {

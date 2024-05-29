@@ -28,4 +28,7 @@ export class FrontendAPI implements APIBase {
             dataKeyOrEvent: event
         })
     }
+    raise<T>(event: string, payload: T, topic?: string): void {
+        this.eventManager.raise(topic ?? this.pluginUuid, event, payload);
+    }
 }
