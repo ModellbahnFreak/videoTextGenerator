@@ -3,17 +3,18 @@ import type { DataKey, DataKeyListener, ROConsumer } from "@videotextgenerator/a
 import { defineStore } from "pinia";
 import { computed, ref, type Ref, type WritableComputedRef } from "vue";
 
-
 export const useDataKeyStore = defineStore('dataKey', () => {
+
     const dataKeyValues = ref<{ [topic: string]: { [dataKey: string]: unknown } }>({});
     const dataKeysListeners = ref<{ [topic: string]: { [dataKey: string]: Map<ROConsumer<unknown>, boolean> } }>({});
     const dataKeys: { [topic: string]: { [dataKey: string]: DataKey<unknown> } } = {};
+    const dataKeyVersions: { [topic: string]: { [dataKey: string]: number } } = {};
 
     const socketsManager = ref<SocketsManager | undefined>();
 
     function setDataKeyValue(topic: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
         if (sendToServer) {
-            socketsManager.value?.dataKey(topic, dataKey, value);
+            socketsManager.value?.dataKey(topic, dataKey, value, getNextDataKeyVersion(topic, dataKey));
         }
         if (!dataKeyValues.value[topic]) {
             dataKeyValues.value[topic] = {};
@@ -87,8 +88,36 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         return dataKeys[topic][dataKey] as DataKey<T>;
     }
 
-    const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value) => {
-        setDataKeyValue(topic, dataKey, value, false);
+
+    function getNextDataKeyVersion(topic: string, dataKey: string): number {
+        if (!dataKeyVersions[topic]) {
+            dataKeyVersions[topic] = {};
+        }
+        if (!dataKeyVersions[topic][dataKey]) {
+            dataKeyVersions[topic][dataKey] = 0;
+        }
+        return ++dataKeyVersions[topic][dataKey];
+    }
+
+    function isDataKeyVersionNew(topic: string, dataKey: string, version: number): boolean {
+        if (!dataKeyVersions[topic]) {
+            dataKeyVersions[topic] = {};
+        }
+        const oldVersion = dataKeyVersions[topic][dataKey];
+        dataKeyVersions[topic][dataKey] = version;
+        const isNew = oldVersion === undefined ||
+            oldVersion < version ||
+            (oldVersion > (4294967295 - 5) && version < 5);
+        if (!isNew) {
+            console.log(`Recevied dataKey ${topic}/d-${dataKey}/${version} again. Not emitting.`);
+        }
+        return isNew;
+    }
+
+    const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value, version) => {
+        if (isDataKeyVersionNew(topic, dataKey, version)) {
+            setDataKeyValue(topic, dataKey, value, false);
+        }
     }
     function setSocketsManager(manager: SocketsManager) {
         if (socketsManager.value) {

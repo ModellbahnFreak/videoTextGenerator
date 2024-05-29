@@ -2,7 +2,6 @@ import type { useClientConfigStore } from "@/vuePlugins/stores/clientConfig";
 import { SocketToBackend } from "./SocketToBackend";
 import type { App, ObjectPlugin as VuePlugin } from "vue";
 import type { DataKeyListener, EventListener, FrontendClientConfig, ListenerOptions, WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage } from "@videotextgenerator/api";
-import { VersionManager } from "./VersionManager";
 import type { useDataKeyStore } from "@/vuePlugins/stores/dataKey";
 import { uuidGenerator } from "@/utils";
 
@@ -10,7 +9,6 @@ export class SocketsManager implements VuePlugin<[]> {
     protected readonly sockets: SocketToBackend[] = [];
 
     protected readonly subscribedTopcis: Set<string> = new Set();
-    protected readonly versionManager = new VersionManager();
 
     protected readonly dataKeyListeners = new Map<DataKeyListener, ListenerOptions>();
     protected readonly eventListeners = new Map<EventListener, ListenerOptions>();
@@ -101,26 +99,22 @@ export class SocketsManager implements VuePlugin<[]> {
                 break;
             case "dataKey":
                 const dataKeyEvent = data as WebsocketDataKeyMessage;
-                if (this.versionManager.isDataKeyVersionNew(dataKeyEvent.topic, dataKeyEvent.dataKey, dataKeyEvent.version)) {
-                    for (const [listener, options] of this.dataKeyListeners) {
-                        if ((!options.topic || options.topic == dataKeyEvent.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKeyEvent.dataKey)) {
-                            listener(dataKeyEvent.topic, dataKeyEvent.dataKey, dataKeyEvent.value, dataKeyEvent.version);
-                            if (options.once === true) {
-                                this.dataKeyListeners.delete(listener);
-                            }
+                for (const [listener, options] of this.dataKeyListeners) {
+                    if ((!options.topic || options.topic == dataKeyEvent.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKeyEvent.dataKey)) {
+                        listener(dataKeyEvent.topic, dataKeyEvent.dataKey, dataKeyEvent.value, dataKeyEvent.version);
+                        if (options.once === true) {
+                            this.dataKeyListeners.delete(listener);
                         }
                     }
                 }
                 break;
             case "event":
                 const eventEvent = data as WebsocketEventMessage;
-                if (!this.versionManager.addKnownEventUuid(eventEvent.topic, eventEvent.event, eventEvent.evtUuid)) {
-                    for (const [listener, options] of this.eventListeners) {
-                        if ((!options.topic || options.topic == eventEvent.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == eventEvent.event)) {
-                            listener(eventEvent.topic, eventEvent.event, eventEvent.payload, eventEvent.evtUuid);
-                            if (options.once === true) {
-                                this.eventListeners.delete(listener);
-                            }
+                for (const [listener, options] of this.eventListeners) {
+                    if ((!options.topic || options.topic == eventEvent.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == eventEvent.event)) {
+                        listener(eventEvent.topic, eventEvent.event, eventEvent.payload, eventEvent.evtUuid);
+                        if (options.once === true) {
+                            this.eventListeners.delete(listener);
                         }
                     }
                 }
@@ -130,20 +124,18 @@ export class SocketsManager implements VuePlugin<[]> {
 
     event: EventListener = (topic, event, payload, eventUuid) => {
         const uuid = eventUuid ?? uuidGenerator();
-        if (!this.versionManager.addKnownEventUuid(topic, event, uuid)) {
-            const eventMsg: WebsocketEventMessage = {
-                type: "event",
-                topic, event, evtUuid: uuid,
-                payload
-            }
-            this.send(eventMsg);
+        const eventMsg: WebsocketEventMessage = {
+            type: "event",
+            topic, event, evtUuid: uuid,
+            payload
         }
+        this.send(eventMsg);
     }
 
     dataKey: DataKeyListener = (topic, dataKey, value, version) => {
         const dataKeyMsg: WebsocketDataKeyMessage = {
             type: "dataKey",
-            topic, dataKey, version: this.versionManager.getNextDataKeyVersion(topic, dataKey),
+            topic, dataKey, version,
             value
         }
         this.send(dataKeyMsg);

@@ -19,7 +19,19 @@ app.use(vuetify);
 
 const socketsManager = new SocketsManager(useClientConfigStore(), useDataKeyStore());
 const eventManager = new EventManager();
-socketsManager.on("event", eventManager.raise.bind(eventManager));
+
+// Connect event manager and sockets manager. Only send an event back to the servers if it is not the event we are currently receiving (reduce message spam)
+let currEventUuid: string | undefined;
+socketsManager.on("event", (topic, event, payload, uuid) => {
+    currEventUuid = uuid;
+    eventManager.raise(topic, event, payload, uuid);
+});
+eventManager.on((topic, event, payload, uuid) => {
+    if (uuid != currEventUuid) {
+        socketsManager.event(topic, event, payload, uuid);
+    }
+});
+
 app.use(socketsManager);
 
 loadPlugins(eventManager).then(() => {
