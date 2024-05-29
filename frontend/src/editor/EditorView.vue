@@ -43,11 +43,11 @@ const editorUnopenedAsItems = computed(() => {
         <v-main class="pa-2">
             <h1>Editor<span v-if="!isConnected"> - NOT CONNECTED!</span></h1>
             <v-row>
-                <v-col cols="3" class="pr-0">
+                <v-col sm="3" class="pr-0">
                     <v-autocomplete label="Panel" density="compact" v-model="panelToOpen" :items="editorUnopenedAsItems"
                         :hide-details="true"></v-autocomplete>
                 </v-col>
-                <v-col cols="1">
+                <v-col cols="auto">
                     <v-btn variant="text" color="success" @click="openSlectedPlugin">Open</v-btn>
                 </v-col>
             </v-row>
