@@ -6,7 +6,7 @@ import type { DataKey } from "@videotextgenerator/api";
 
 const topic = ref("IncludedEditors");
 const dataKey = ref("Test");
-const valueStr = ref("");
+const valueStr = ref<string | null>(null);
 const latestEvent = ref("");
 
 const api = await includedEditorsComponents.api
@@ -26,26 +26,26 @@ async function changeDataKey() {
 
 async function setValue() {
     changeDataKey();
-    let valueParsed = valueStr.value;
+    let valueParsed = valueStr.value ?? "";
     try {
         valueParsed = JSON.parse(valueParsed);
     } catch { }
     currDataKey.value.dataKey?.set(valueParsed);
-    valueStr.value = "";
+    valueStr.value = null;
 }
 
 async function raiseEvent() {
-    let valueParsed = valueStr.value;
+    let valueParsed = valueStr.value ?? "";
     try {
         valueParsed = JSON.parse(valueParsed);
     } catch { }
     api.raise(dataKey.value, valueParsed, topic.value);
-    valueStr.value = "";
+    valueStr.value = null;
 }
 
 async function loadValue() {
     changeDataKey();
-    valueStr.value = "";
+    valueStr.value = null;
 }
 
 function valueInput(value: string) {
@@ -55,6 +55,14 @@ function valueInput(value: string) {
 const selectedKeyName = computed(() => {
     return `${currDataKey.value.dataKey?.getTopic()}.${currDataKey.value.dataKey?.getKey()}`;
 })
+
+const prettyprintJson = computed(() => {
+    let str = JSON.stringify(currDataKey.value.dataKey?.value ?? undefined) ?? "";
+    if (str.charAt(0) == "\"" && str.charAt(str.length - 1) == "\"") {
+        return str.substring(1, str.length - 1);
+    }
+    return str;
+});
 </script>
 
 <template>
@@ -72,7 +80,7 @@ const selectedKeyName = computed(() => {
         <v-row>
             <v-col cols="12" sm="">
                 <v-text-field label="Value" variant="underlined" :hide-details="true"
-                    :model-value="valueStr.length == 0 ? JSON.stringify(currDataKey.dataKey?.value) : valueStr"
+                    :model-value="valueStr == null ? prettyprintJson : valueStr"
                     @update:modelValue="valueInput"></v-text-field>
             </v-col>
             <v-col cols="auto"><v-btn prepend-icon="mdi-upload" @click="setValue">Set</v-btn></v-col>
