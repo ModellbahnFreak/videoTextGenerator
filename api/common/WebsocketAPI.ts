@@ -8,6 +8,7 @@ export interface WebsocketDataKeyMessage extends WebsocketMessage {
     dataKey: string;
     value: unknown;
     version: number;
+    subversion: number;
 }
 
 export interface WebsocketEventMessage extends WebsocketMessage {

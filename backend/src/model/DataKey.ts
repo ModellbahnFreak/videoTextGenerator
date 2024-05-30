@@ -23,6 +23,11 @@ export class DataKey {
     @Column()
     version: number = -1;
 
+    @Column()
+    subversion: number = -1;
+
     @ManyToOne(() => Client, client => client.createdDataKeys)
-    createdBy: Promise<Client | null> = Promise.resolve(null);
+    createdBy: Promise<Client> = Promise.resolve(new Client());
+    @Column()
+    createdByUuid: string = "";
 }

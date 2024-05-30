@@ -27,22 +27,15 @@ export class DataKeyManager {
         console.log(`Requested dataKey ${topic}/d-${dataKey}`);
         let instance = this.instances.filter(i => i.topic == topic && i.key == dataKey)[0];
         if (!instance) {
-            let topicInstance = await this.topicRepository.findOneBy({ idOrName: topic });
-            if (!topicInstance) {
-                topicInstance = new Topic();
-                topicInstance.idOrName = topic;
-                topicInstance = await this.topicRepository.save(topicInstance);
-            }
-            let dataKeyInstance = await this.dataKeyRepository.findByName(topicInstance, dataKey);
-            if (!dataKeyInstance) {
-                dataKeyInstance = new DataKey();
-                dataKeyInstance.key = dataKey;
-                dataKeyInstance.topic = Promise.resolve(topicInstance);
-                dataKeyInstance.topicIdOrName = topicInstance.idOrName;
-                dataKeyInstance.value = null;
-                dataKeyInstance = await this.dataKeyRepository.save(dataKeyInstance);
-            }
-            instance = new BackendDataKey(dataKeyInstance);
+            await this.topicRepository.createIfNotExists({ idOrName: topic });
+            let dataKeyInstance = await this.dataKeyRepository.createIfNotExists({
+                key: dataKey,
+                topicIdOrName: topic,
+                createdByUuid: this.serverClient.uuid,
+                version: -1,
+                subversion: -1
+            })
+            instance = new BackendDataKey(dataKeyInstance!!, this.dataKeyRepository, this.serverClient);
             for (const [listener, options] of this.dataKeyListeners) {
                 if ((!options.topic || options.topic == topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKey)) {
                     instance.on(listener, options.once);
@@ -53,12 +46,12 @@ export class DataKeyManager {
         return instance as BackendDataKey<T>;
     }
 
-    public async received(topic: string, dataKey: string, value: unknown, version: number, fromClient: Client): Promise<boolean> {
+    public async received(topic: string, dataKey: string, value: unknown, version: number, subversion: number, fromClient: Client): Promise<boolean> {
         const dataKeyInstance = await this.for(topic, dataKey, fromClient);
         if (!dataKeyInstance) {
             return false;
         }
-        await dataKeyInstance.received(value, version, fromClient);
+        await dataKeyInstance.received(value, version, subversion, fromClient);
         return true;
     }
 

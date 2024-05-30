@@ -47,8 +47,8 @@ export class ClientManager {
         socket.send(clientConfig);
     }
 
-    async dataKey(topic: string, dataKey: string, value: unknown, version: number = -1): Promise<void> {
-        await Promise.all([...this.clients.values()].map(c => c.dataKey(topic, dataKey, value, version)));
+    async dataKey(topic: string, dataKey: string, value: unknown, version: number = -1, subversion: number = 0): Promise<void> {
+        await Promise.all([...this.clients.values()].map(c => c.dataKey(topic, dataKey, value, version, subversion)));
     }
 
     async event(topic: string, event: string, payload: unknown, evtUuid: string = "") {

@@ -36,13 +36,13 @@ export class BackendClient {
         this.sockets.delete(socket.uuid);
     }
 
-    async dataKey(topic: string, dataKey: string, value: unknown, version: number) {
+    async dataKey(topic: string, dataKey: string, value: unknown, version: number, subversion: number) {
         if (!this.subscribedTopics.has(topic)) {
             return;
         }
         const dataKeyMsg: WebsocketDataKeyMessage = {
             type: "dataKey",
-            topic, dataKey, value, version
+            topic, dataKey, value, version, subversion
         };
         for (const [uuid, socket] of this.sockets) {
             socket.send(dataKeyMsg);
@@ -71,7 +71,7 @@ export class BackendClient {
             case "dataKey":
                 const dataKeyMsg = msg as WebsocketDataKeyMessage;
                 this.subscribedTopics.set(dataKeyMsg.topic, true);
-                await this.manager.dataKeyManager.received(dataKeyMsg.topic, dataKeyMsg.dataKey, dataKeyMsg.value, dataKeyMsg.version, this.client);
+                await this.manager.dataKeyManager.received(dataKeyMsg.topic, dataKeyMsg.dataKey, dataKeyMsg.value, dataKeyMsg.version, dataKeyMsg.subversion, this.client);
                 break;
             case "event":
                 const eventMsg = msg as WebsocketEventMessage;

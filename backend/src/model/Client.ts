@@ -43,13 +43,6 @@ export class Client {
         if (this === to || this.uuid == to.uuid) {
             return 0;
         }
-        if (this.type != to.type) {
-            if (this.type == ClientType.SERVER) {
-                return Number.MAX_SAFE_INTEGER;
-            } else {
-                return Number.MIN_SAFE_INTEGER;
-            }
-        }
         return this.uuid.localeCompare(to.uuid);
     }
 }

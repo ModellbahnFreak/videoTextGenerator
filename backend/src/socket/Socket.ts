@@ -58,7 +58,7 @@ export class ClientSocket {
                 }
                 const dataKeyReqReply: WebsocketDataKeyMessage = {
                     type: "dataKey",
-                    topic: dataKey.topic, dataKey: dataKey.key, value: dataKey.value, version: dataKey.currentVersion
+                    topic: dataKey.topic, dataKey: dataKey.key, value: dataKey.value, version: dataKey.currentVersion, subversion: dataKey.currentSubversion
                 }
                 this.send(dataKeyReqReply);
                 break;
