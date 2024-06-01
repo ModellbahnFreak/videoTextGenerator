@@ -1,0 +1,13 @@
+{
+  "name": "@videotextgenerator/base_titles",
+  "version": "1.0.0",
+  "description": "Basic titles for the videotext generator (lower third, title, ...)",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ModellbahnFreak",
+  "license": "MIT",
+  "devDependencies": {
+    "@videotextgenerator/api": "file:../../api"
+  }
+}
