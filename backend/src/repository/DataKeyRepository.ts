@@ -43,7 +43,7 @@ export const dataKeyRepository: DataKeyRepository = dataSource.getRepository(Dat
             .update()
             .set({
                 ...dataKey,
-                subversion: () => `(max(subversion, ${isFinite(dataKey.subversion) ? dataKey.subversion : 0})/2 + 1) * 2`
+                subversion: () => `(max((1 - min(1, ${dataKey.version}-version)) * subversion, ${isFinite(dataKey.subversion) ? dataKey.subversion : 0})/2 + 1) * 2`
             })
             .where({ key: dataKey.key, topicIdOrName: dataKey.topicIdOrName })
             .andWhere("((version < :newVersion or (version > (4294967295 - 5) and :newVersion < 5)) or (version = :newVersion and createdByUuid < :newCreatedBy))", {

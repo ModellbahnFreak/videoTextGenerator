@@ -92,15 +92,38 @@ export class BackendDataKey<T> implements IDatakKey<T> {
             subversion,
             createdByUuid: fromClient.uuid
         };
-        let setSuccess = await this.dataKeyRepository.versionUpdate(newDataKey);
-        if (setSuccess || await this.reload(newDataKey)) {
-            console.log(Date.now() + ": Updated");
-            console.log(`Created version ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key}`);
+        const wasCreated = await this.reload(newDataKey);
+        if (wasCreated) {
             this.callListeners();
-        } else {
-            console.log(Date.now() + ": Not Updated");
-            console.log(`No new version as ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key} alsready exists`);
+            return;
         }
+        if (
+            this.dataKey.version < version ||
+            (this.dataKey.version > (4294967295 - 5) && version < 5) ||
+            (this.dataKey.version == version && this.dataKey.createdByUuid.localeCompare(fromClient.uuid) < 0)
+        ) {
+            this.dataKey.value = value;
+            this.dataKey.version = version;
+            this.dataKey.createdBy = Promise.resolve(fromClient);
+            this.dataKey.createdByUuid = fromClient.uuid;
+            this.dataKey.subversion = version > this.dataKey.version
+                ? Math.floor(Math.max(this.dataKey.subversion, subversion) / 2) * 2 + 1
+                : 1;
+            console.log(Date.now() + `: Calling listeners with ${this.dataKey.version}.${this.dataKey.subversion}`);
+            this.callListeners();
+        }
+
+        this.dataKeyRepository.versionUpdate(newDataKey).then(async setSuccess => {
+            const recreated = await this.reload(this.dataKey);
+            if (setSuccess || recreated) {
+                console.log(Date.now() + ": Updated");
+                console.log(`Created version ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key}`);
+                this.callListeners();
+            } else {
+                console.log(Date.now() + ": Not Updated");
+                console.log(`No new version as ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key} alsready exists`);
+            }
+        });
 
         /*const reloaded = await this.dataKeyRepository.findByName(this.dataKey.topicIdOrName, this.dataKey.key);
         if (reloaded) {
