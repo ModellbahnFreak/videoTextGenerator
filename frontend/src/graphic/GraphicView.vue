@@ -22,7 +22,7 @@ const components = loadAllGraphicsComponents();
 
 <style>
 html {
-    overflow: hidden;
+    overflow: hidden !important;
 }
 
 .graphicContainer {
