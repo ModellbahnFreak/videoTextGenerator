@@ -38,6 +38,9 @@ export class EventManager {
         }
         this.knownEvtUuids.add(evtUuid);
         console.log(`Raising event ${evtUuid}`);
+        if (payload === undefined) {
+            payload = null;
+        }
 
         const specificListeners = this.eventListeners.get(topic)?.get(event);
         this.callListeners(specificListeners, topic, event, payload, evtUuid);
