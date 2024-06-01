@@ -8,7 +8,7 @@ export const useDataKeyStore = defineStore('dataKey', () => {
     const dataKeyValues = ref<{ [topic: string]: { [dataKey: string]: unknown } }>({});
     const dataKeysListeners = ref<{ [topic: string]: { [dataKey: string]: Map<ROConsumer<unknown>, boolean> } }>({});
     const dataKeys: { [topic: string]: { [dataKey: string]: DataKey<unknown> } } = {};
-    const dataKeyVersions: { [topic: string]: { [dataKey: string]: number } } = {};
+    const dataKeyVersions: { [topic: string]: { [dataKey: string]: {version: number, subversion: number} } } = {};
 
     const socketsManager = ref<SocketsManager | undefined>();
 
@@ -17,7 +17,7 @@ export const useDataKeyStore = defineStore('dataKey', () => {
             value = null;
         }
         if (sendToServer) {
-            socketsManager.value?.dataKey(topic, dataKey, value, getNextDataKeyVersion(topic, dataKey));
+            socketsManager.value?.dataKey(topic, dataKey, value, getNextDataKeyVersion(topic, dataKey), 0);
         }
         if (!dataKeyValues.value[topic]) {
             dataKeyValues.value[topic] = {};
@@ -97,28 +97,35 @@ export const useDataKeyStore = defineStore('dataKey', () => {
             dataKeyVersions[topic] = {};
         }
         if (!dataKeyVersions[topic][dataKey]) {
-            dataKeyVersions[topic][dataKey] = 0;
+            dataKeyVersions[topic][dataKey] = {version: -1, subversion: -1};
         }
-        return ++dataKeyVersions[topic][dataKey];
+        dataKeyVersions[topic][dataKey].subversion = 0;
+        return ++dataKeyVersions[topic][dataKey].version;
     }
 
-    function isDataKeyVersionNew(topic: string, dataKey: string, version: number): boolean {
+    function isDataKeyVersionNew(topic: string, dataKey: string, version: number, subversion: number): boolean {
         if (!dataKeyVersions[topic]) {
             dataKeyVersions[topic] = {};
         }
-        const oldVersion = dataKeyVersions[topic][dataKey];
-        dataKeyVersions[topic][dataKey] = version;
-        const isNew = oldVersion === undefined ||
-            oldVersion < version ||
-            (oldVersion > (4294967295 - 5) && version < 5);
-        if (!isNew) {
-            console.log(`Recevied dataKey ${topic}/d-${dataKey}/${version} again. Not emitting.`);
+        if (!dataKeyVersions[topic][dataKey]) {
+            dataKeyVersions[topic][dataKey] = {version: -1, subversion: -1};
         }
+        const oldVersion = dataKeyVersions[topic][dataKey];
+        const isNew = oldVersion === undefined ||
+            oldVersion.version < version ||
+            (oldVersion.version > (4294967295 - 5) && version < 5) || 
+            (oldVersion.version == version && oldVersion.subversion < subversion);
+            if (!isNew) {
+                console.log(`Recevied dataKey ${topic}/d-${dataKey}/${version}.${subversion} again. Not emitting.`);
+            }
+
+        dataKeyVersions[topic][dataKey].version = version;
+        dataKeyVersions[topic][dataKey].subversion = subversion;
         return isNew;
     }
 
-    const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value, version) => {
-        if (isDataKeyVersionNew(topic, dataKey, version)) {
+    const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value, version, subversion) => {
+        if (isDataKeyVersionNew(topic, dataKey, version, subversion)) {
             setDataKeyValue(topic, dataKey, value, false);
         }
     }

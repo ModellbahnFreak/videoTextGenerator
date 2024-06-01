@@ -101,7 +101,7 @@ export class SocketsManager implements VuePlugin<[]> {
                 const dataKeyEvent = data as WebsocketDataKeyMessage;
                 for (const [listener, options] of this.dataKeyListeners) {
                     if ((!options.topic || options.topic == dataKeyEvent.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKeyEvent.dataKey)) {
-                        listener(dataKeyEvent.topic, dataKeyEvent.dataKey, dataKeyEvent.value, dataKeyEvent.version);
+                        listener(dataKeyEvent.topic, dataKeyEvent.dataKey, dataKeyEvent.value, dataKeyEvent.version, dataKeyEvent.subversion);
                         if (options.once === true) {
                             this.dataKeyListeners.delete(listener);
                         }
@@ -132,10 +132,10 @@ export class SocketsManager implements VuePlugin<[]> {
         this.send(eventMsg);
     }
 
-    dataKey: DataKeyListener = (topic, dataKey, value, version) => {
+    dataKey: DataKeyListener = (topic, dataKey, value, version, subversion) => {
         const dataKeyMsg: WebsocketDataKeyMessage = {
             type: "dataKey",
-            topic, dataKey, version,
+            topic, dataKey, version, subversion,
             value
         }
         this.send(dataKeyMsg);

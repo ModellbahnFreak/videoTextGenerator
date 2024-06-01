@@ -23,9 +23,20 @@ export class SocketToBackend {
         clearTimeout(this.openingTimer);
         this.openingTimer = undefined;
         if (!this.socket) {
-            console.log(`Trying to connect to server ${this.serverUrl}`);
             this.isLoggedIn = false;
-            this.socket = new WebSocket(this.serverUrl);
+            let actualUrl = this.serverUrl;
+            if (!this.serverUrl.startsWith("ws:") && !this.serverUrl.startsWith("wss:")) {
+                actualUrl = window.location.protocol == "https:" ? "wss:" : "ws:";
+                actualUrl += "//" + window.location.host;
+                if (this.serverUrl.startsWith("/")) {
+                    actualUrl += this.serverUrl;
+                } else {
+                    const path = window.location.pathname;
+                    actualUrl += path.substring(0, path.lastIndexOf("/")+1) + this.serverUrl;
+                }
+            }
+            console.log(`Trying to connect to server ${actualUrl}`);
+            this.socket = new WebSocket(actualUrl);
             this.socket.binaryType = "arraybuffer";
             this.socket.addEventListener("open", this._socketOpenBound);
             this.socket.addEventListener("error", this._socketErrorBound);
