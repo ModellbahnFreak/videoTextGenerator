@@ -33,4 +33,12 @@ export class BackendAPI implements APIBase {
     raise<T>(event: string, payload: T, topic?: string): void {
         this.eventManager.raise(topic ?? this.pluginUuid, event, payload);
     }
+
+    async knownTopics(): Promise<string[]> {
+        return this.dataKeyManager.getKnownTopics();
+    }
+
+    async knownDataKeys(topic: string): Promise<string[]> {
+        return this.dataKeyManager.getKnownDataKeysFor(topic);
+    }
 }

@@ -31,4 +31,11 @@ export class FrontendAPI implements APIBase {
     raise<T>(event: string, payload: T, topic?: string): void {
         this.eventManager.raise(topic ?? this.pluginUuid, event, payload);
     }
+
+    knownTopics(): Promise<string[]> {
+        throw new Error("Method not implemented.");
+    }
+    knownDataKeys(topic: string): Promise<string[]> {
+        throw new Error("Method not implemented.");
+    }
 }

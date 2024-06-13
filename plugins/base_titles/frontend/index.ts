@@ -18,3 +18,10 @@ class BaseTitlesPluginFrontend implements FrontendPlugin {
     }
 }
 export default new BaseTitlesPluginFrontend();
+
+export interface LowerThirdDataKey {
+    isActive: boolean,
+    text: string,
+    subtitle: string,
+    logoUrl: string
+}

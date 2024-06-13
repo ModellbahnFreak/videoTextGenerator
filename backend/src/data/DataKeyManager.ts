@@ -19,6 +19,22 @@ export class DataKeyManager {
 
     }
 
+    public async getKnownTopics(): Promise<string[]> {
+        const topics = await this.topicRepository.find({
+            select: { idOrName: true },
+        });
+        return topics.map(t => t.idOrName);
+    }
+
+    public async getKnownDataKeysFor(topic: string): Promise<string[]> {
+        //todo: requesting client can be used for permission check
+        const dataKeys = await this.dataKeyRepository.find({
+            select: { key: true },
+            where: { topicIdOrName: topic }
+        });
+        return dataKeys.map(d => d.key);
+    }
+
     public async for<T>(topic: string, dataKey: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<T> | null> {
         //todo: requesting client can be used for permission check
         if (topic == "" || dataKey == "") {

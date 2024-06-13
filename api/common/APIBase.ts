@@ -5,4 +5,6 @@ export interface APIBase {
     on<T>(event: string, listener: ROConsumer<T>, topic?: string): void;
     off<T>(event: string, listener: ROConsumer<T>, topic?: string): void;
     raise<T>(event: string, payload: T, topic?: string): void;
+    knownTopics(): Promise<string[]>;
+    knownDataKeys(topic: string): Promise<string[]>;
 }

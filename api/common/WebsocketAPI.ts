@@ -1,5 +1,5 @@
 export interface WebsocketMessage {
-    type: "dataKey" | "event" | "dataKeyRequest" | "subscribe" | "login" | "clientConfig" | "error";
+    type: "dataKey" | "event" | "dataKeyRequest" | "subscribe" | "login" | "clientConfig" | "error" | "getKownTopics" | "kownTopics";
 }
 
 export interface WebsocketDataKeyMessage extends WebsocketMessage {
@@ -46,4 +46,12 @@ export interface WebsocketErrorMessage extends WebsocketMessage {
     type: "error",
     message?: string,
     relatesTo?: WebsocketMessage
+}
+
+export interface WebsocketGetKnownTopics extends WebsocketMessage {
+    type: "getKownTopics",
+}
+
+export interface WebsocketKnownTopics extends WebsocketMessage {
+    type: "kownTopics",
 }

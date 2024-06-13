@@ -28,12 +28,20 @@ export class BackendClient {
         this.client = reloaded;
     }
 
+    protected async subscribeTo(topic: string): Promise<void> {
+        if (this.subscribedTopics.has(topic)) {
+            return;
+        }
+        this.subscribedTopics.set(topic, true);
+        const existingDataKeys = this.manager.da
+    }
+
     addSocket(socket: ClientSocket) {
         this.sockets.set(socket.uuid, socket);
     }
 
     removeSocket(socket: ClientSocket) {
-        this.sockets.delete(socket.uuid);
+        subscribeTo this.sockets.delete(socket.uuid);
     }
 
     async dataKey(topic: string, dataKey: string, value: unknown, version: number, subversion: number) {

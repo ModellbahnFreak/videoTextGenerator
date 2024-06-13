@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import baseTitles from "../index";
+import { LowerThirdDataKey } from "../index";
 import { computed } from 'vue';
 
 const api = await baseTitles.api
 
-const lowerThirdText = await api.getDataKey<string>("lowerThirdText");
-const lowerThirdSubtitle = await api.getDataKey<string>("lowerThirdSubtitle");
-const logoUrl = await api.getDataKey<string>("logoUrl");
+const lowerThird = await api.getDataKey<LowerThirdDataKey>("lowerThird");
 
 const isLogoActive = computed(() => {
-    return logoUrl?.value && logoUrl.value.length > 0
+    return lowerThird.value?.logoUrl?.value && logoUrl.value.length > 0
 });
 
 </script>
@@ -56,14 +55,15 @@ const isLogoActive = computed(() => {
 <template>
     <div class="lowerThirdOuterContainer" ref="lowerThirdOuterContainer">
         <v-row class="lowerThirdContainer" ref="lowerThirdContainer" :style="{
-            height: !!lowerThirdSubtitle ? '12.5vh' : '9vh',
+            height: !!lowerThird?.subtitle ? '12.5vh' : '9vh',
         }">
             <v-col style="flex-grow: 0; flex-shrink:0;height:100%;" class="pa-0 mr-3 d-flex align-center">
-                <img :src="logoUrl" style="height: 8.5vh;" :style="{ 'display': isLogoActive ? undefined : 'none' }" />
+                <img :src="lowerThird?.logoUrl" style="height: 8.5vh;"
+                    :style="{ 'display': isLogoActive ? undefined : 'none' }" />
             </v-col>
             <v-col class="pa-0">
-                <div v-html="lowerThirdText" class="lowerThirdText"></div>
-                <div v-html="lowerThirdSubtitle" class="lowerThirdSubtitle"></div>
+                <div v-html="lowerThird?.text" class="lowerThirdText"></div>
+                <div v-html="lowerThird?.subtitle" class="lowerThirdSubtitle"></div>
             </v-col>
         </v-row>
     </div>
