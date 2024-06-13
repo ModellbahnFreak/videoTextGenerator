@@ -32,7 +32,7 @@ export class SocketToBackend {
                     actualUrl += this.serverUrl;
                 } else {
                     const path = window.location.pathname;
-                    actualUrl += path.substring(0, path.lastIndexOf("/")+1) + this.serverUrl;
+                    actualUrl += path.substring(0, path.lastIndexOf("/") + 1) + this.serverUrl;
                 }
             }
             console.log(`Trying to connect to server ${actualUrl}`);

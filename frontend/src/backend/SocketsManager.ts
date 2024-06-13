@@ -1,7 +1,7 @@
 import type { useClientConfigStore } from "@/vuePlugins/stores/clientConfig";
 import { SocketToBackend } from "./SocketToBackend";
 import type { App, ObjectPlugin as VuePlugin } from "vue";
-import type { DataKeyListener, EventListener, FrontendClientConfig, ListenerOptions, WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage } from "@videotextgenerator/api";
+import type { DataKeyListener, EventListener, FrontendClientConfig, ListenerOptions, MessageListener, WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketGetKnownTopicsMessage, WebsocketKnownTopicsMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import type { useDataKeyStore } from "@/vuePlugins/stores/dataKey";
 import { uuidGenerator } from "@/utils";
 
@@ -12,6 +12,7 @@ export class SocketsManager implements VuePlugin<[]> {
 
     protected readonly dataKeyListeners = new Map<DataKeyListener, ListenerOptions>();
     protected readonly eventListeners = new Map<EventListener, ListenerOptions>();
+    protected readonly genericListeners = new Map<MessageListener, boolean>();
 
     constructor(
         protected readonly clientConfigStore: ReturnType<typeof useClientConfigStore>,
@@ -120,6 +121,11 @@ export class SocketsManager implements VuePlugin<[]> {
                 }
                 break;
         }
+        for (const [listener, _] of this.genericListeners) {
+            if (listener(data)) {
+                this.genericListeners.delete(listener);
+            }
+        }
     }
 
     event: EventListener = (topic, event, payload, eventUuid) => {
@@ -170,10 +176,33 @@ export class SocketsManager implements VuePlugin<[]> {
         });
     }
 
+    async getKnownTopics(): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            const getKnownTopicMsg: WebsocketGetKnownTopicsMessage = {
+                type: "getKownTopics"
+            }
+            const listener: MessageListener = (msg) => {
+                if (msg.type == "kownTopics") {
+                    resolve((msg as WebsocketKnownTopicsMessage).topics);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            this.on("message", listener);
+            this.send(getKnownTopicMsg);
+        });
+    }
+
     send(message: WebsocketMessage) {
         console.log(`Sending ${message.type} message:`, message);
         if (message.type !== "subscribe" && (message as WebsocketDataKeyMessage).topic !== undefined) {
             this.subscribedTopcis.add((message as WebsocketDataKeyMessage).topic);
+        }
+        if (message.type == "subscribe") {
+            for (const topic of (message as WebsocketSubscribeMessage).topics) {
+                this.subscribedTopcis.add(topic);
+            }
         }
         for (const socket of this.sockets) {
             socket.send(message);
@@ -182,7 +211,8 @@ export class SocketsManager implements VuePlugin<[]> {
 
     on(event: "dataKey", listener: DataKeyListener, options?: Partial<ListenerOptions>): void;
     on(event: "event", listener: EventListener, options?: Partial<ListenerOptions>): void;
-    on(event: string, listener: DataKeyListener | EventListener, options: Partial<ListenerOptions> = {}): void {
+    on(event: "message", listener: MessageListener): void;
+    on(event: string, listener: DataKeyListener | EventListener | MessageListener, options: Partial<ListenerOptions> = {}): void {
         const optionsWithDefault: ListenerOptions = {
             once: false,
             topic: undefined,
@@ -196,18 +226,25 @@ export class SocketsManager implements VuePlugin<[]> {
             case "event":
                 this.eventListeners.set(listener as EventListener, optionsWithDefault);
                 break;
+            case "message":
+                this.genericListeners.set(listener as MessageListener, false);
+                break;
         }
     }
 
     off(event: "dataKey", listener: DataKeyListener): void;
     off(event: "event", listener: EventListener): void;
-    off(event: string, listener: DataKeyListener | EventListener): void {
+    off(event: "message", listener: MessageListener): void;
+    off(event: string, listener: DataKeyListener | EventListener | MessageListener): void {
         switch (event) {
             case "dataKey":
                 this.dataKeyListeners.delete(listener as DataKeyListener);
                 break;
             case "event":
                 this.eventListeners.delete(listener as EventListener);
+                break;
+            case "message":
+                this.genericListeners.delete(listener as MessageListener);
                 break;
         }
     }

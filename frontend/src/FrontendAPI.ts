@@ -33,9 +33,9 @@ export class FrontendAPI implements APIBase {
     }
 
     knownTopics(): Promise<string[]> {
-        throw new Error("Method not implemented.");
+        return this.dataKeyStore.getKnownTopics();
     }
-    knownDataKeys(topic: string): Promise<string[]> {
-        throw new Error("Method not implemented.");
+    async knownDataKeys(topic: string): Promise<string[]> {
+        return this.dataKeyStore.getKnownDataKeys(topic);
     }
 }

@@ -48,10 +48,11 @@ export interface WebsocketErrorMessage extends WebsocketMessage {
     relatesTo?: WebsocketMessage
 }
 
-export interface WebsocketGetKnownTopics extends WebsocketMessage {
+export interface WebsocketGetKnownTopicsMessage extends WebsocketMessage {
     type: "getKownTopics",
 }
 
-export interface WebsocketKnownTopics extends WebsocketMessage {
+export interface WebsocketKnownTopicsMessage extends WebsocketMessage {
     type: "kownTopics",
+    topics: string[]
 }

@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import type { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
+import type { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketErrorMessage, WebsocketGetKnownTopicsMessage, WebsocketKnownTopicsMessage, WebsocketLoginMessage, WebsocketMessage } from "@videotextgenerator/api"
 import { BackendClient } from "./BackendClient.js";
 import { ClientManager } from "./ClientManager.js";
 
@@ -61,6 +61,14 @@ export class ClientSocket {
                     topic: dataKey.topic, dataKey: dataKey.key, value: dataKey.value, version: dataKey.currentVersion, subversion: dataKey.currentSubversion
                 }
                 this.send(dataKeyReqReply);
+                break;
+            case "getKownTopics":
+                const allTopics = await this.manager.dataKeyManager.getKnownTopics();
+                const knownTopicsMsg: WebsocketKnownTopicsMessage = {
+                    type: "kownTopics",
+                    topics: allTopics
+                };
+                this.send(knownTopicsMsg);
                 break;
         }
         await this.client.onMessage(json);

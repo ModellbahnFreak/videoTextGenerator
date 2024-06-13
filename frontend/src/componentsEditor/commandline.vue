@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import includedEditorsComponents from "./index";
 import { shallowRef } from 'vue';
 import type { DataKey } from "@videotextgenerator/api";
+import { watch } from 'vue';
 
 const topic = ref("IncludedEditors");
 const dataKey = ref("Test");
@@ -22,6 +23,8 @@ async function changeDataKey() {
     currDataKey.value = { dataKey: await api.getDataKey(dataKey.value, topic.value) };
     api.on(dataKey.value, eventListener, topic.value);
     latestEvent.value = "";
+    api.knownTopics().then(topics => knownTopics.value = topics);
+    api.knownDataKeys(topic.value).then(keys => knownDataKeys.value = keys);
 }
 
 async function setValue() {
@@ -63,17 +66,26 @@ const prettyprintJson = computed(() => {
     }
     return str;
 });
+
+const knownTopics = ref<string[]>([]);
+const knownDataKeys = ref<string[]>([]);
+
+watch(topic, async (newTopic) => {
+    const keys = await api.knownDataKeys(topic.value);
+    knownDataKeys.value = keys;
+})
 </script>
 
 <template>
     <v-card-text>
         <v-row>
             <v-col cols="12" sm="">
-                <v-text-field label="Topic" variant="underlined" :hide-details="true" v-model="topic"></v-text-field>
+                <v-combobox label="Topic" variant="underlined" :hide-details="true" v-model="topic"
+                    :items="knownTopics"></v-combobox>
             </v-col>
             <v-col cols="12" sm="">
-                <v-text-field label="DataKey/Event" variant="underlined" :hide-details="true"
-                    v-model="dataKey"></v-text-field>
+                <v-combobox label="DataKey/Event" variant="underlined" :hide-details="true" v-model="dataKey"
+                    :items="knownDataKeys"></v-combobox>
             </v-col>
             <v-col cols="auto"><v-btn prepend-icon="mdi-download" @click="loadValue">Load</v-btn></v-col>
         </v-row>
