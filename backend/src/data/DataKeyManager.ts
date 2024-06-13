@@ -7,7 +7,7 @@ import { TopicRepository } from "../repository/TopicRepository.js";
 import { BackendDataKey } from "./BackendDataKey.js";
 
 export class DataKeyManager {
-    protected readonly instances: BackendDataKey<unknown>[] = [];
+    protected readonly instances: Map<string, Map<string, BackendDataKey<unknown>>> = new Map();
 
     protected readonly dataKeyListeners: Map<DataKeyListener, ListenerOptions> = new Map();
 
@@ -26,7 +26,7 @@ export class DataKeyManager {
         return topics.map(t => t.idOrName);
     }
 
-    public async getKnownDataKeysFor(topic: string): Promise<string[]> {
+    public async getKnownDataKeys(topic: string, requestingClient: Client = this.serverClient): Promise<string[]> {
         //todo: requesting client can be used for permission check
         const dataKeys = await this.dataKeyRepository.find({
             select: { key: true },
@@ -35,29 +35,63 @@ export class DataKeyManager {
         return dataKeys.map(d => d.key);
     }
 
+    public async allKnownFor(topic: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<unknown>[]> {
+        if (topic == "") {
+            throw new Error("Illegal Arguments. Need topic.");
+        }
+        let topicInstances = this.instances.get(topic);
+        if (!topicInstances) {
+            topicInstances = new Map();
+            this.instances.set(topic, topicInstances);
+            await this.topicRepository.createIfNotExists({ idOrName: topic });
+        }
+
+        const instances = (await this.getKnownDataKeys(topic, requestingClient)).map(dataKey => {
+            let instance = topicInstances.get(dataKey);
+            if (!instance) {
+                instance = new BackendDataKey({
+                    topicIdOrName: topic, key: dataKey
+                }, this.dataKeyRepository, this.serverClient);
+                topicInstances.set(dataKey, instance);
+
+                for (const [listener, options] of this.dataKeyListeners) {
+                    if ((!options.topic || options.topic == topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKey)) {
+                        instance.on(listener, options.once);
+                    }
+                }
+            }
+            return instance;
+        });
+        await Promise.all(instances.map(instance => instance.isInitialized));
+        return instances;
+    }
+
     public async for<T>(topic: string, dataKey: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<T> | null> {
         //todo: requesting client can be used for permission check
         if (topic == "" || dataKey == "") {
             throw new Error("Illegal Arguments. Need topic and data key");
         }
         console.log(`Requested dataKey ${topic}/d-${dataKey}`);
-        let instance = this.instances.filter(i => i.topic == topic && i.key == dataKey)[0];
-        if (!instance) {
+
+        let topicInstances = this.instances.get(topic);
+        if (!topicInstances) {
+            topicInstances = new Map();
+            this.instances.set(topic, topicInstances);
             await this.topicRepository.createIfNotExists({ idOrName: topic });
-            let dataKeyInstance = await this.dataKeyRepository.createIfNotExists({
-                key: dataKey,
-                topicIdOrName: topic,
-                createdByUuid: this.serverClient.uuid,
-                version: -1,
-                subversion: -1
-            })
-            instance = new BackendDataKey(dataKeyInstance!!, this.dataKeyRepository, this.serverClient);
+        }
+        let instance = topicInstances.get(dataKey);
+        if (!instance) {
+            instance = new BackendDataKey({
+                topicIdOrName: topic, key: dataKey
+            }, this.dataKeyRepository, this.serverClient);
+            topicInstances.set(dataKey, instance);
+            await instance.isInitialized;
+
             for (const [listener, options] of this.dataKeyListeners) {
                 if ((!options.topic || options.topic == topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == dataKey)) {
                     instance.on(listener, options.once);
                 }
             }
-            this.instances.push(instance);
         }
         return instance as BackendDataKey<T>;
     }
@@ -80,9 +114,11 @@ export class DataKeyManager {
             ...options
         }
         this.dataKeyListeners.set(listener, optionsWithDefault);
-        for (const instance of this.instances) {
-            if ((!options.topic || options.topic == instance.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == instance.key)) {
-                instance.on(listener, options.once);
+        for (const topicInstances of this.instances.values()) {
+            for (const instance of topicInstances.values()) {
+                if ((!options.topic || options.topic == instance.topic) && (!options.dataKeyOrEvent || options.dataKeyOrEvent == instance.key)) {
+                    instance.on(listener, options.once);
+                }
             }
         }
 
@@ -90,8 +126,10 @@ export class DataKeyManager {
 
     off(listener: DataKeyListener): void {
         this.dataKeyListeners.delete(listener);
-        for (const instance of this.instances) {
-            instance.off(listener);
+        for (const topicInstances of this.instances.values()) {
+            for (const instance of topicInstances.values()) {
+                instance.off(listener);
+            }
         }
     }
 }

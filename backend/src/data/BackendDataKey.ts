@@ -1,7 +1,10 @@
 import type { DataKeyListener, DataKey as IDatakKey, ROConsumer } from "@videotextgenerator/api";
 import { DataKey } from "../model/DataKey.js";
-import { Client, ClientType } from "../model/Client.js";
+import { Client } from "../model/Client.js";
 import type { DataKeyRepository } from "../repository/DataKeyRepository.js";
+import { Topic } from "../model/Topic.js";
+
+type DataKeyWithoutDetails = Partial<DataKey> & { key: string, topicIdOrName: string };
 
 export class BackendDataKey<T> implements IDatakKey<T> {
 
@@ -9,12 +12,27 @@ export class BackendDataKey<T> implements IDatakKey<T> {
 
     protected readonly listeners: Map<ROConsumer<T> | DataKeyListener, boolean> = new Map();
 
+    public readonly isInitialized: Promise<void>;
+
     constructor(
-        dataKey: DataKey,
+        dataKey: DataKeyWithoutDetails,
         protected readonly dataKeyRepository: DataKeyRepository,
         protected readonly serverClient: Client,
     ) {
-        this.dataKey = dataKey;
+        if (dataKey.version !== undefined) {
+            this.dataKey = dataKey as DataKey;
+        } else {
+            this.dataKey = {
+                topicIdOrName: dataKey.topicIdOrName,
+                topic: Promise.resolve(undefined as unknown as Topic),
+                key: dataKey.key,
+                createdByUuid: serverClient.uuid,
+                createdBy: Promise.resolve(serverClient),
+                version: -1,
+                subversion: -1,
+            };
+        }
+        this.isInitialized = this.reload().then();
     }
 
     get value(): T {

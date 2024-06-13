@@ -39,6 +39,6 @@ export class BackendAPI implements APIBase {
     }
 
     async knownDataKeys(topic: string): Promise<string[]> {
-        return this.dataKeyManager.getKnownDataKeysFor(topic);
+        return this.dataKeyManager.getKnownDataKeys(topic);
     }
 }

@@ -28,20 +28,37 @@ export class BackendClient {
         this.client = reloaded;
     }
 
+    protected async sendAlDataKeysFor(topic: string): Promise<void> {
+        const dataKeyMsgs = (await this.manager.dataKeyManager.allKnownFor(topic)).map(instance => ({
+            type: "dataKey",
+            topic, dataKey: instance.key,
+            version: instance.currentVersion, subversion: instance.currentSubversion,
+            value: instance.value,
+        } as WebsocketDataKeyMessage));
+        for (const [uuid, socket] of this.sockets) {
+            for (const msg of dataKeyMsgs) {
+                socket.send(msg);
+            }
+        }
+    }
+
     protected async subscribeTo(topic: string): Promise<void> {
         if (this.subscribedTopics.has(topic)) {
             return;
         }
         this.subscribedTopics.set(topic, true);
-        const existingDataKeys = this.manager.da
+        await this.sendAlDataKeysFor(topic);
     }
 
     addSocket(socket: ClientSocket) {
         this.sockets.set(socket.uuid, socket);
+        for (const topic of this.subscribedTopics.keys()) {
+            this.sendAlDataKeysFor(topic);
+        }
     }
 
     removeSocket(socket: ClientSocket) {
-        subscribeTo this.sockets.delete(socket.uuid);
+        this.sockets.delete(socket.uuid);
     }
 
     async dataKey(topic: string, dataKey: string, value: unknown, version: number, subversion: number) {
@@ -74,21 +91,21 @@ export class BackendClient {
         switch (msg.type) {
             case "dataKeyRequest":
                 const dataKeyReqMsg = msg as WebsocketDataKeyRequestMessage;
-                this.subscribedTopics.set(dataKeyReqMsg.topic, true);
+                this.subscribeTo(dataKeyReqMsg.topic);
                 break;
             case "dataKey":
                 const dataKeyMsg = msg as WebsocketDataKeyMessage;
-                this.subscribedTopics.set(dataKeyMsg.topic, true);
+                this.subscribeTo(dataKeyMsg.topic);
                 await this.manager.dataKeyManager.received(dataKeyMsg.topic, dataKeyMsg.dataKey, dataKeyMsg.value, dataKeyMsg.version, dataKeyMsg.subversion, this.client);
                 break;
             case "event":
                 const eventMsg = msg as WebsocketEventMessage;
-                this.subscribedTopics.set(eventMsg.topic, true);
+                this.subscribeTo(eventMsg.topic);
                 await this.manager.eventManager.raise(eventMsg.topic, eventMsg.event, eventMsg.payload, eventMsg.evtUuid);
                 break;
             case "subscribe":
                 const subscribeMsg = msg as WebsocketSubscribeMessage;
-                subscribeMsg.topics.forEach(topic => this.subscribedTopics.set(topic, true));
+                subscribeMsg.topics.forEach(topic => this.subscribeTo(topic));
                 break;
         }
     }
