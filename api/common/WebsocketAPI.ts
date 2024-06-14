@@ -39,7 +39,8 @@ export interface WebsocketClientConfigMessage extends WebsocketMessage {
     type: "clientConfig",
     uuid: string,
     serverUuid: string,
-    config: any //todo
+    config: any, //todo
+    token?: string,
 }
 
 export interface WebsocketErrorMessage extends WebsocketMessage {

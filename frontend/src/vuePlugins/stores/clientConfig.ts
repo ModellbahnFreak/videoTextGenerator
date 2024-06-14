@@ -49,11 +49,15 @@ export const useClientConfigStore = defineStore('clientConfig', () => {
             console.warn(`Changing from client ${uuid.value} to ${msg.uuid}`)
         }
         console.log("Logged in as " + msg.uuid);
-        if (token.value == uuid.value || token.value.length == 0) {
+        if (msg.token) {
+            token.value = msg.token;
+        } else if (token.value == uuid.value || token.value.length == 0) {
             token.value = msg.uuid;
         }
         uuid.value = msg.uuid;
-        config.value = msg.config ?? {};
+        if (msg.config && msg.config !== null) {
+            config.value = msg.config;
+        }
         storeConfig();
     }
 
