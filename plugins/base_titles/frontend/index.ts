@@ -14,7 +14,9 @@ class BaseTitlesPluginFrontend implements FrontendPlugin {
         ]
     }
     getEditorComponents() {
-        return [];
+        return [
+            { title: "Title Editor", component: () => import("./editor/TitleEditor.vue") }
+        ];
     }
 }
 export default new BaseTitlesPluginFrontend();
