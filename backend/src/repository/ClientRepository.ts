@@ -8,6 +8,7 @@ export interface ClientRepository extends Repository<Client> {
     loginClient(token?: string): Promise<Client | undefined>;
     createServerClient(uuid: string): Promise<Client>;
     cleanup(): Promise<void>;
+    createIfNotExists(topic: Omit<Client, "createdDataKeys">): Promise<Client>;
 }
 
 export const clientRepository: ClientRepository = dataSource.getRepository(Client).extend({
@@ -72,4 +73,20 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
             return;
         });
     },
+    async createIfNotExists(client: Omit<Client, "createdDataKeys">): Promise<Client> {
+        const existing = await this.findOneBy({
+            uuid: client.uuid
+        });
+        if (existing) {
+            return existing;
+        }
+        await this.createQueryBuilder()
+            .insert()
+            .values(client)
+            .orUpdate(["uuid"])
+            .execute();
+        return await this.findOneByOrFail({
+            uuid: client.uuid
+        });
+    }
 } as ClientRepository);

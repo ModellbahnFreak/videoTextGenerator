@@ -42,7 +42,7 @@ export class ClientManager {
             type: "clientConfig",
             uuid: client.uuid,
             serverUuid: this.serverUuid,
-            config: {},
+            config: client.clientModel.config,
         };
         socket.send(clientConfig);
     }

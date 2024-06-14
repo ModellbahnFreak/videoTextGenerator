@@ -1,7 +1,7 @@
 import { ClientSocket } from "./Socket.js";
-import { Client } from "../model/Client.js"
+import { Client, ClientType } from "../model/Client.js"
 import { ClientRepository } from "../repository/ClientRepository.js";
-import { WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
+import { WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { ClientManager } from "./ClientManager.js";
 
 export class BackendClient {
@@ -13,19 +13,6 @@ export class BackendClient {
         protected manager: ClientManager,
     ) {
 
-    }
-
-    protected async reloadClient() {
-        let reloaded = await this.manager.clientRepository.findOne({
-            where: { uuid: this.client.uuid },
-            cache: true
-        });
-        if (!reloaded) {
-            // todo: inform sockets that client has been deleted
-            console.warn("Client was deleted: " + this.client.uuid);
-            reloaded = await this.manager.clientRepository.save(this.client);
-        }
-        this.client = reloaded;
     }
 
     protected async sendAlDataKeysFor(topic: string): Promise<void> {
@@ -106,6 +93,19 @@ export class BackendClient {
             case "subscribe":
                 const subscribeMsg = msg as WebsocketSubscribeMessage;
                 subscribeMsg.topics.forEach(topic => this.subscribeTo(topic));
+                break;
+            case "clientConfig":
+                const clientCfgMsg = msg as WebsocketClientConfigMessage;
+                if (clientCfgMsg.uuid !== this.client.uuid) {
+                    if (this.client.type == ClientType.SERVER) {
+                        //todo: pass client config set request to other client
+                    } else {
+                        throw new Error("Setting config for other client only allowed for other servers => Server to server comm");
+                    }
+                }
+                await this.manager.clientRepository.createIfNotExists(this.client);
+                this.client.config = clientCfgMsg.config;
+                await this.manager.clientRepository.save(this.client);
                 break;
         }
     }

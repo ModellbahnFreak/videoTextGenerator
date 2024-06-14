@@ -129,13 +129,6 @@ export const useDataKeyStore = defineStore('dataKey', () => {
             setDataKeyValue(topic, dataKey, value, false);
         }
     }
-    function setSocketsManager(manager: SocketsManager) {
-        if (socketsManager.value) {
-            socketsManager.value.off("dataKey", onDataKeyFromServer);
-        }
-        socketsManager.value = manager;
-        socketsManager.value.on("dataKey", onDataKeyFromServer);
-    }
 
     async function getKnownDataKeys(topic: string): Promise<string[]> {
         socketsManager.value?.send({
@@ -163,6 +156,14 @@ export const useDataKeyStore = defineStore('dataKey', () => {
                 resolve(Object.keys(dataKeyValues.value));
             });
         });
+    }
+
+    function setSocketsManager(manager: SocketsManager) {
+        if (socketsManager.value) {
+            socketsManager.value.off("dataKey", onDataKeyFromServer);
+        }
+        socketsManager.value = manager;
+        socketsManager.value.on("dataKey", onDataKeyFromServer);
     }
 
     return {

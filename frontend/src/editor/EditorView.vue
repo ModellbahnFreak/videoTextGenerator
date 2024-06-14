@@ -33,7 +33,7 @@ function getComponentName(componentData: ComponentMetadata) {
 }
 
 const editorUnopenedAsItems = computed(() => {
-    return componentStore.editors.filter(c => !c.isOpened).map((c, i) => ({ value: i, title: getComponentName(c) })).concat([{ value: -1, title: "--All--" }]);
+    return componentStore.editors.map((c, i) => ({ value: i, title: getComponentName(c), isOpened: c.isOpened })).filter(c => !c.isOpened).concat([{ value: -1, title: "--All--", isOpened: false }]);
 });
 
 </script>

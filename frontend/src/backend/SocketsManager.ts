@@ -18,6 +18,7 @@ export class SocketsManager implements VuePlugin<[]> {
         protected readonly clientConfigStore: ReturnType<typeof useClientConfigStore>,
         protected readonly dataKeyStore: ReturnType<typeof useDataKeyStore>
     ) {
+        this.clientConfigStore.setSocketsManager(this);
         this.dataKeyStore.setSocketsManager(this);
     }
 
@@ -45,7 +46,7 @@ export class SocketsManager implements VuePlugin<[]> {
     }
 
     protected getClientconfigServerUrls() {
-        const specifiedServers = (this.clientConfigStore.config as FrontendClientConfig).servers;
+        const specifiedServers = (this.clientConfigStore.config as FrontendClientConfig)?.servers;
         if (!specifiedServers || specifiedServers.length == 0) {
             return ["/api"];
         }
