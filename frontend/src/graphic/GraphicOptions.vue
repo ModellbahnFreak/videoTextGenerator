@@ -10,7 +10,7 @@ const pluginStore = usePluginStore();
     <v-dialog max-width="500" transition="fade-transition">
         <template v-slot:activator="{ props: activatorProps }">
             <div id="graphicsOptionButtonContainer">
-                <v-btn id="graphicsOptionButton" icon="mdi-dots-grid" v-bind="activatorProps"></v-btn>
+                <v-btn id="graphicsOptionButton" :icon="true" v-bind="activatorProps">=</v-btn>
             </div>
         </template>
         <template v-slot:default="{ isActive }">
