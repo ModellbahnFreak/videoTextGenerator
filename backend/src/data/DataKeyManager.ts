@@ -2,9 +2,10 @@ import { DataKeyListener, EventListener, ListenerOptions } from "@videotextgener
 import { Client } from "../model/Client.js";
 import { DataKey } from "../model/DataKey.js";
 import { Topic } from "../model/Topic.js";
-import { DataKeyRepository } from "../repository/DataKeyRepository.js";
-import { TopicRepository } from "../repository/TopicRepository.js";
+import type { DataKeyRepository } from "../repository/DataKeyRepository.js";
+import type { TopicRepository } from "../repository/TopicRepository.js";
 import { BackendDataKey } from "./BackendDataKey.js";
+import type { TopicPermissionRepository } from "../repository/TopicPermissionRepository.js";
 
 export class DataKeyManager {
     protected readonly instances: Map<string, Map<string, BackendDataKey<unknown>>> = new Map();
@@ -14,6 +15,7 @@ export class DataKeyManager {
     constructor(
         protected readonly topicRepository: TopicRepository,
         protected readonly dataKeyRepository: DataKeyRepository,
+        protected readonly topicPermissionRepository: TopicPermissionRepository,
         protected readonly serverClient: Client,
     ) {
 
@@ -67,7 +69,14 @@ export class DataKeyManager {
     }
 
     public async for<T>(topic: string, dataKey: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<T> | null> {
-        //todo: requesting client can be used for permission check
+        
+        if (
+            requestingClient.uuid != this.serverClient.uuid &&
+            (((await this.topicPermissionRepository.clientPermission(topic, requestingClient)) & 0b001) !== 0b001) 
+        ) {
+            return null;
+        }
+
         if (topic == "" || dataKey == "") {
             throw new Error("Illegal Arguments. Need topic and data key");
         }
@@ -97,6 +106,7 @@ export class DataKeyManager {
     }
 
     public async received(topic: string, dataKey: string, value: unknown, version: number, subversion: number, fromClient: Client): Promise<boolean> {
+        //todo: check write permission
         const dataKeyInstance = await this.for(topic, dataKey, fromClient);
         if (!dataKeyInstance) {
             return false;

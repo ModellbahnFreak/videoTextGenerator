@@ -3,6 +3,7 @@ import { ClientSocket } from "../socket/Socket.js";
 import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
 import { isEnvTrue, uuidGenerator } from "../utils.js";
 import { DataKey } from "./DataKey.js";
+import { Access, TopicPermission } from "./TopicPermission.js";
 
 export enum ClientType {
     SERVER = "server",
@@ -39,8 +40,14 @@ export class Client {
     @Column()
     public uuidLoginAllowed: boolean = false;
 
+    @Column()
+    public defaultAccess: Access = Access.NONE;
+
     @OneToMany(() => DataKey, dataKey => dataKey.createdBy)
     public createdDataKeys: Promise<DataKey[]> = Promise.resolve([]);
+
+    @OneToMany(() => TopicPermission, permission => permission.client)
+    public topicPermissions: Promise<TopicPermission[]> = Promise.resolve([]);
 
     compare(to: Client): number {
         if (this === to || this.uuid == to.uuid) {
