@@ -21,7 +21,7 @@ const components = loadAllGraphicsComponents();
 </template>
 
 <style>
-html {
+html:has(.graphicContainer) {
     overflow: hidden !important;
 }
 

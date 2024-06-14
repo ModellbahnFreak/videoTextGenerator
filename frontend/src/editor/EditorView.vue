@@ -52,7 +52,8 @@ const editorUnopenedAsItems = computed(() => {
                 </v-col>
             </v-row>
             <v-divider class="my-2"></v-divider>
-            <v-card v-for="(componentData, i) in componentStore.editors" :key="i" v-show="componentData.isOpened">
+            <v-card v-for="(componentData, i) in componentStore.editors" :key="i" v-show="componentData.isOpened"
+                class="ma-2">
                 <v-card-title class="d-flex">
                     <div class="flex-0-0">
                         {{ getComponentName(componentData) }}
