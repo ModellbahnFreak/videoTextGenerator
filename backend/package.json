@@ -20,7 +20,8 @@
     "sqlite3": "^5.1.7",
     "dotenv": "^16.4.5",
     "ws": "^8.17.0",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "ip-matching": "^2.1.2"
   },
   "devDependencies": {
     "@videotextgenerator/api": "file:../../api",
