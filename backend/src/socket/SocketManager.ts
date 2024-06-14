@@ -53,9 +53,11 @@ export class SocketManager {
 
     protected onConnection(socket: WebSocket, request: IncomingMessage) {
         const uuid = uuidGenerator();
-        console.debug(`New WebSocket connection ${uuid}`);
+        const xforward = request.headers["x-forwarded-for"];
+        const remoteAddress = (typeof xforward === "string") ? xforward : (xforward instanceof Array ? xforward[0] : request.socket.remoteAddress);
+        console.debug(`New WebSocket connection ${uuid} from ${remoteAddress}`);
         this.checkOpenSockets();
-        this.clientSockets.set(uuid, new ClientSocket(socket, this.clientManager, uuid, this.serverUuid));
+        this.clientSockets.set(uuid, new ClientSocket(socket, this.clientManager, uuid, this.serverUuid, remoteAddress));
     }
 
     protected onError(error: Error) {

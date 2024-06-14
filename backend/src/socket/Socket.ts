@@ -12,6 +12,7 @@ export class ClientSocket {
         protected readonly manager: ClientManager,
         public readonly uuid: string,
         protected readonly serverUuid: string,
+        public readonly remoteAddress: string | undefined,
     ) {
         socket.on("message", this.onMessage.bind(this));
         socket.on("error", this.onError.bind(this));

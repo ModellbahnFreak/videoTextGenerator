@@ -22,7 +22,8 @@ export default defineConfig({
         target: "http://localhost:8088",
         ws: true,
         secure: false,
-        changeOrigin: false
+        changeOrigin: false,
+        xfwd: true,
       }
     },
     fs: {

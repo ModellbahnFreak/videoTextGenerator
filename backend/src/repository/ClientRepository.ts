@@ -3,6 +3,7 @@ import dataSource from "../dataSource.js";
 import { Client, ClientType } from "../model/Client.js";
 import { DataKey } from "../model/DataKey.js";
 import { Topic } from "../model/Topic.js";
+import { isEnvTrue } from "../utils.js";
 
 export interface ClientRepository extends Repository<Client> {
     loginClient(token?: string): Promise<Client | undefined>;
@@ -23,7 +24,7 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
             client = await this.findOneBy({
                 uuid: uuid
             });
-        } else {
+        } else if (isEnvTrue(process.env.VIDEOTEXTGENERATOR_ALLOW_ANONYMOUS_LOGIN)) {
             client = new Client();
         }
         if (!client) {
