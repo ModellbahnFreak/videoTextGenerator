@@ -8,11 +8,11 @@ export interface TopicRepository extends Repository<Topic> {
      * 
      * CAUTION: Relatively slow (always does an insert or update)
      */
-    createIfNotExists(topic: Omit<Topic, "dataKeys">): Promise<Topic>;
+    createIfNotExists(topic: Omit<Omit<Topic, "dataKeys">, "permissions">): Promise<Topic>;
 }
 
 export const topicRepository: TopicRepository = dataSource.getRepository(Topic).extend({
-    async createIfNotExists(topic: Omit<Topic, "dataKeys">): Promise<Topic> {
+    async createIfNotExists(topic: Omit<Omit<Topic, "dataKeys">, "permissions">): Promise<Topic> {
         const existing = await this.findOneBy({
             idOrName: topic.idOrName
         });

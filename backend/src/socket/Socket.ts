@@ -64,7 +64,7 @@ export class ClientSocket {
                 this.send(dataKeyReqReply);
                 break;
             case "getKownTopics":
-                const allTopics = await this.manager.dataKeyManager.getKnownTopics();
+                const allTopics = await this.manager.dataKeyManager.getKnownTopics(this.client.clientModel);
                 const knownTopicsMsg: WebsocketKnownTopicsMessage = {
                     type: "kownTopics",
                     topics: allTopics

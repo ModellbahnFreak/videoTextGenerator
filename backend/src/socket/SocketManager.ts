@@ -6,6 +6,7 @@ import { ClientManager } from "./ClientManager.js";
 import { ClientRepository } from "../repository/ClientRepository.js";
 import { DataKeyManager } from "../data/DataKeyManager.js";
 import { EventManager } from "../data/EventManager.js";
+import { TopicPermissionRepository } from "../repository/TopicPermissionRepository.js";
 
 /**
  * Class responsible for managing the WebSocketServer
@@ -27,6 +28,7 @@ export class SocketManager {
     constructor(
         protected readonly serverUuid: string,
         clientRepository: ClientRepository,
+        topicPermissionRepository: TopicPermissionRepository,
         dataKeyManager: DataKeyManager,
         eventManager: EventManager,
         webSocketServerOrOptions?: WebSocketServer | ServerOptions,
@@ -46,7 +48,7 @@ export class SocketManager {
         this.closedWatcher = setInterval(this.checkOpenSockets.bind(this), 1000);
         console.log(`Waiting for WebSocket connections...`);
 
-        this.clientManager = new ClientManager(clientRepository, dataKeyManager, eventManager, this.serverUuid);
+        this.clientManager = new ClientManager(clientRepository, topicPermissionRepository, dataKeyManager, eventManager, this.serverUuid);
         this.dataKey = this.clientManager.dataKey.bind(this.clientManager);
         this.event = this.clientManager.event.bind(this.clientManager);
     }

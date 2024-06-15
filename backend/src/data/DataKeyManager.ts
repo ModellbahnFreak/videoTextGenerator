@@ -6,6 +6,8 @@ import type { DataKeyRepository } from "../repository/DataKeyRepository.js";
 import type { TopicRepository } from "../repository/TopicRepository.js";
 import { BackendDataKey } from "./BackendDataKey.js";
 import type { TopicPermissionRepository } from "../repository/TopicPermissionRepository.js";
+import { Access, TopicPermission } from "../model/TopicPermission.js";
+import { IsNull, SelectQueryBuilder } from "typeorm";
 
 export class DataKeyManager {
     protected readonly instances: Map<string, Map<string, BackendDataKey<unknown>>> = new Map();
@@ -21,15 +23,62 @@ export class DataKeyManager {
 
     }
 
-    public async getKnownTopics(): Promise<string[]> {
-        const topics = await this.topicRepository.find({
-            select: { idOrName: true },
-        });
-        return topics.map(t => t.idOrName);
+    protected async clientMayAccess(topic: string, client: Client): Promise<boolean> {
+        return client.uuid == this.serverClient.uuid ||
+            (((await this.topicPermissionRepository.clientPermission(topic, client.uuid)) & Access.READ) === Access.READ)
     }
 
+    /**
+     * Returns a list of topic ids that are known to the server and that may be accessed by the specified client
+     * 
+     * TOPIC ACCESS PROTECTED
+     * 
+     * @param requestingClient The client that initiated the request. This determines which topics are visible
+     */
+    public async getKnownTopics(requestingClient: Client = this.serverClient): Promise<string[]> {
+        if (
+            requestingClient.uuid == this.serverClient.uuid ||
+            (requestingClient.defaultAccess & Access.READ) === Access.READ
+        ) {
+            const topics: Topic[] = await this.topicRepository.createQueryBuilder("topic")
+                .select(["idOrName"])
+                .leftJoin("topic.permissions", "permission_join",
+                    "permission_join.clientUuid = :clientUuid and (permission_join.access is null or (permission_join.access & :read) = :read)"
+                    , {
+                        clientUuid: "8febea88-55c1-c26d-5624-c9655ddbbaa8",
+                        read: Access.READ
+                    })
+                .execute();
+            console.log("Allowing access to topics: ", topics);
+            return topics.map(topic => topic.idOrName);
+        } else {
+            const topicPermissions: TopicPermission[] = await this.topicPermissionRepository.createQueryBuilder("topic_permission")
+                .select(["topicIdOrName"])
+                .where({ clientUuid: requestingClient.uuid })
+                .andWhere("(topic_permission.access & :read) = :read", {
+                    read: Access.READ
+                })
+                .execute();
+            console.log("Restricted topics access: ", topicPermissions);
+            return topicPermissions.map(perm => perm.topicIdOrName);
+        }
+    }
+
+    /**
+     * Returns all known data key names/keys for the specified topic IFF the specified client may access the topic.
+     * Empty list otherwise.
+     * 
+     * TOPIC ACCESS PROTECTED
+     * 
+     * @param topic The topic for which to return the data keys
+     * @param requestingClient The client initiating the request
+     * @returns A list of data key names
+     */
     public async getKnownDataKeys(topic: string, requestingClient: Client = this.serverClient): Promise<string[]> {
-        //todo: requesting client can be used for permission check
+        if (!await this.clientMayAccess(topic, requestingClient)) {
+            return [];
+        }
+
         const dataKeys = await this.dataKeyRepository.find({
             select: { key: true },
             where: { topicIdOrName: topic }
@@ -37,7 +86,21 @@ export class DataKeyManager {
         return dataKeys.map(d => d.key);
     }
 
+    /**
+     * Returns all known data key instances for the specified topic IFF the specified client may access the topic.
+     * Empty list otherwise.
+     * 
+     * TOPIC ACCESS PROTECTED
+     * 
+     * @param topic The topic for which to return the data keys
+     * @param requestingClient The client initiating the request
+     * @returns A list of backend data key instances
+     */
     public async allKnownFor(topic: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<unknown>[]> {
+        if (!await this.clientMayAccess(topic, requestingClient)) {
+            return [];
+        }
+
         if (topic == "") {
             throw new Error("Illegal Arguments. Need topic.");
         }
@@ -69,11 +132,7 @@ export class DataKeyManager {
     }
 
     public async for<T>(topic: string, dataKey: string, requestingClient: Client = this.serverClient): Promise<BackendDataKey<T> | null> {
-        
-        if (
-            requestingClient.uuid != this.serverClient.uuid &&
-            (((await this.topicPermissionRepository.clientPermission(topic, requestingClient)) & 0b001) !== 0b001) 
-        ) {
+        if (!await this.clientMayAccess(topic, requestingClient)) {
             return null;
         }
 

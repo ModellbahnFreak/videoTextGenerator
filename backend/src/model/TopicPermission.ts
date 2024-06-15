@@ -4,8 +4,9 @@ import { Client } from "./Client.js";
 
 export enum Access {
     NONE = 0b000,
-    READ = 0b001,
-    READ_WRITE = 0b011,
+    READ = 0b100,
+    READ_WRITE = 0b110,
+    FULL = 0b111
 }
 
 @Entity()
@@ -23,15 +24,16 @@ export class TopicPermission {
         }
     }
 
-    @ManyToOne(() => Topic)
+    @ManyToOne(() => Topic, topic => topic.permissions)
     @JoinColumn()
     topic: Promise<Topic> = Promise.resolve(new Topic());
     @PrimaryColumn({ nullable: false })
     topicIdOrName: string = "";
 
     @ManyToOne(() => Client, client => client.topicPermissions)
+    @JoinColumn()
     client: Promise<Client> = Promise.resolve(new Client());
-    @PrimaryColumn({nullable: false})
+    @PrimaryColumn({ nullable: false })
     clientUuid: string = "";
 
     @Column()

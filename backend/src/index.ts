@@ -11,6 +11,7 @@ import { DataKeyManager } from "./data/DataKeyManager.js";
 import { topicRepository } from "./repository/TopicRepository.js";
 import { dataKeyRepository } from "./repository/DataKeyRepository.js";
 import { EventManager } from "./data/EventManager.js";
+import { topicPermissionRepository } from "./repository/TopicPermissionRepository.js";
 
 dotenv.config({});
 
@@ -50,12 +51,13 @@ async function main() {
         express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist"))(req, res, next);
     })
 
-    const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository, serverClient);
+    const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository, topicPermissionRepository, serverClient);
     const eventManager = new EventManager();
 
     const wsManager = new SocketManager(
         uuid,
         clientRepository,
+        topicPermissionRepository,
         dataKeyManager,
         eventManager,
         {

@@ -11,7 +11,7 @@ export interface TopicPermissionRepository extends Repository<TopicPermission> {
      */
     createIfNotExists(topicPermission: Omit<Omit<TopicPermission, "client">, "topic">): Promise<TopicPermission>;
 
-    clientPermission(topic: string, client: Client): Promise<Access | null>;
+    clientPermission(topic: string, clientUuid: string): Promise<Access>;
 }
 
 export const topicPermissionRepository: TopicPermissionRepository = dataSource.getRepository(TopicPermission).extend({
@@ -34,13 +34,22 @@ export const topicPermissionRepository: TopicPermissionRepository = dataSource.g
         });
     },
 
-    async clientPermission(topic: string, client: Client): Promise<Access | null> {
-        return (await this.find({
-            select: {access: true},
-            where: {
-                topicIdOrName: topic,
-                clientUuid: clientUuid
-            }
-        }))?.access ?? client.defaultAccess;
+    async clientPermission(topic: string, clientUuid: string): Promise<Access> {
+        // todo: query permissions for all clients, use that for sending of data keys => reduces requests
+        const result: { defaultAccess: Access, access: Access }[] = await this.manager.createQueryBuilder(Client, "client")
+            .select("client.defaultAccess", "defaultAccess")
+            .where({
+                uuid: clientUuid
+            })
+            .leftJoin("client.topicPermissions", "permissions", "permissions.topicIdOrName = :topicIdOrName", { topicIdOrName: topic })
+            .addSelect("permissions.access", "access")
+            .limit(1)
+            .cache(true)
+            .execute();
+        if (result.length > 0) {
+            return result[0].access ?? result[0].defaultAccess;
+        } else {
+            return Access.NONE;
+        }
     }
 } as TopicPermissionRepository);

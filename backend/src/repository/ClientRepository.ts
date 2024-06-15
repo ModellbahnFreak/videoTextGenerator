@@ -4,6 +4,7 @@ import { Client, ClientType } from "../model/Client.js";
 import { DataKey } from "../model/DataKey.js";
 import { Topic } from "../model/Topic.js";
 import { isEnvTrue } from "../utils.js";
+import { TopicPermission } from "../model/TopicPermission.js";
 
 export interface ClientRepository extends Repository<Client> {
     loginClient(token?: string): Promise<Client | undefined>;
@@ -62,9 +63,13 @@ export const clientRepository: ClientRepository = dataSource.getRepository(Clien
             })).map(c => c.uuid);
 
             const allUnusedClientIds = (await Promise.all(
-                clientsWithoutConfig.map(async uuid => ({ uuid, dataKeys: await manager.countBy(DataKey, { createdBy: { uuid } }) }))
+                clientsWithoutConfig.map(async uuid => ({
+                    uuid,
+                    dataKeys: await manager.countBy(DataKey, { createdBy: { uuid } }),
+                    permissions: await manager.countBy(TopicPermission, { clientUuid: uuid })
+                }))
             ))
-                .filter(c => c.dataKeys <= 0)
+                .filter(c => c.dataKeys <= 0 && c.permissions <= 0)
                 .map(c => c.uuid);
 
             if (allUnusedClientIds.length > 0) {

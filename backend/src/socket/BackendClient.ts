@@ -3,6 +3,7 @@ import { Client, ClientType } from "../model/Client.js"
 import { ClientRepository } from "../repository/ClientRepository.js";
 import { WebsocketClientConfigMessage, WebsocketDataKeyMessage, WebsocketDataKeyRequestMessage, WebsocketEventMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { ClientManager } from "./ClientManager.js";
+import { Access } from "../model/TopicPermission.js";
 
 export class BackendClient {
     protected readonly sockets: Map<string, ClientSocket> = new Map();
@@ -15,8 +16,8 @@ export class BackendClient {
 
     }
 
-    protected async sendAlDataKeysFor(topic: string): Promise<void> {
-        const dataKeyMsgs = (await this.manager.dataKeyManager.allKnownFor(topic)).map(instance => ({
+    protected async sendAllDataKeysFor(topic: string): Promise<void> {
+        const dataKeyMsgs = (await this.manager.dataKeyManager.allKnownFor(topic, this.client)).map(instance => ({
             type: "dataKey",
             topic, dataKey: instance.key,
             version: instance.currentVersion, subversion: instance.currentSubversion,
@@ -34,13 +35,13 @@ export class BackendClient {
             return;
         }
         this.subscribedTopics.set(topic, true);
-        await this.sendAlDataKeysFor(topic);
+        await this.sendAllDataKeysFor(topic);
     }
 
     addSocket(socket: ClientSocket) {
         this.sockets.set(socket.uuid, socket);
         for (const topic of this.subscribedTopics.keys()) {
-            this.sendAlDataKeysFor(topic);
+            this.sendAllDataKeysFor(topic);
         }
     }
 
@@ -50,6 +51,10 @@ export class BackendClient {
 
     async dataKey(topic: string, dataKey: string, value: unknown, version: number, subversion: number) {
         if (!this.subscribedTopics.has(topic)) {
+            return;
+        }
+        // todo: check timing and cache permission lookup if needed
+        if ((await this.manager.topicPermissionRepository.clientPermission(topic, this.uuid) & Access.READ) !== Access.READ) {
             return;
         }
         const dataKeyMsg: WebsocketDataKeyMessage = {
@@ -63,6 +68,9 @@ export class BackendClient {
 
     async event(topic: string, event: string, payload: unknown, evtUuid: string) {
         if (!this.subscribedTopics.has(topic)) {
+            return;
+        }
+        if ((await this.manager.topicPermissionRepository.clientPermission(topic, this.uuid) & Access.READ) !== Access.READ) {
             return;
         }
         const eventMsg: WebsocketEventMessage = {
