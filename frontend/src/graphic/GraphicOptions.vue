@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useComponentStore } from '@/vuePlugins/stores/component';
 import { usePluginStore } from '@/vuePlugins/stores/plugin';
+import SharedOptions from "@/editor/SharedOptions.vue";
 
 const componentStore = useComponentStore();
 const pluginStore = usePluginStore();
@@ -16,6 +17,7 @@ const pluginStore = usePluginStore();
         <template v-slot:default="{ isActive }">
             <v-card title="Options">
                 <v-card-text>
+                    <SharedOptions />
                     Visible graphics
                     <v-switch v-for="(pluginData, i) in componentStore.graphics" :key="i"
                         :model-value="pluginData.isOpened"
