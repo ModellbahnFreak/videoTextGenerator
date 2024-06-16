@@ -8,6 +8,12 @@ export interface NamedComponent {
     component: LazyOrImmediateComponent;
 }
 
+export interface ComponentMetadata {
+    indexInPlugin: number;
+    isOpened: boolean;
+    pluginUuid: string;
+    title: string
+}
 
 export interface FrontendPlugin extends BasePlugin {
     getGraphicComponents(): NamedComponent[];

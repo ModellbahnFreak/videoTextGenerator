@@ -1,10 +1,10 @@
 import type { SocketsManager } from "@/backend/SocketsManager";
-import type { WebsocketClientConfigMessage } from "@videotextgenerator/api";
+import type { FrontendClientConfig, WebsocketClientConfigMessage } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useClientConfigStore = defineStore('clientConfig', () => {
-    const config = ref<any>({});
+    const config = ref<FrontendClientConfig>({});
     const uuid = ref("");
     const token = ref("");
     const useLocalStorage = ref(true);
@@ -61,11 +61,11 @@ export const useClientConfigStore = defineStore('clientConfig', () => {
         storeConfig();
     }
 
-    function getConfigKeyOrInitialize<T>(key: string, defaultValue?: T): T {
-        if (!config.value[key]) {
-            config.value[key] = defaultValue;
+    function getConfigKeyOrInitialize<T = FrontendClientConfig[keyof FrontendClientConfig]>(key: keyof FrontendClientConfig, defaultValue?: T): T {
+        if (!config.value[key] && defaultValue) {
+            config.value[key] = defaultValue as unknown as any;
         }
-        return config.value[key];
+        return config.value[key] as T;
     }
 
     function setToken(newToken?: string | null) {

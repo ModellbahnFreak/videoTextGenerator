@@ -4,12 +4,17 @@ import { ref } from 'vue';
 import { defineAsyncComponent, type AsyncComponentLoader } from 'vue';
 import type { SocketsManager } from "@/backend/SocketsManager";
 import { computed } from 'vue';
-import { useComponentStore, type ComponentMetadata } from "@/vuePlugins/stores/component"
+import { useComponentStore } from "@/vuePlugins/stores/component"
 import { loadAllEditorComponents } from '@/PluginManager';
 import { inject } from 'vue';
+import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
+import type { ComponentMetadata } from '@videotextgenerator/api';
+import EditorOptions from "./EditorOptions.vue";
 
 const componentStore = useComponentStore();
 const components = loadAllEditorComponents();
+
+const clientConfigStore = useClientConfigStore();
 
 let panelToOpen = ref(-1);
 
@@ -41,7 +46,8 @@ const editorUnopenedAsItems = computed(() => {
 <template>
     <v-app>
         <v-main class="pa-2">
-            <h1>Editor<span v-if="!isConnected"> - NOT CONNECTED!</span></h1>
+            <h1>Editor<span v-if="!isConnected"> - NOT CONNECTED!</span><span v-if="clientConfigStore.config.identify"
+                    class="identify"> - IDENTIFYING!</span></h1>
             <v-row>
                 <v-col sm="3" class="pr-0">
                     <v-autocomplete label="Panel" density="compact" v-model="panelToOpen" :items="editorUnopenedAsItems"
@@ -49,6 +55,10 @@ const editorUnopenedAsItems = computed(() => {
                 </v-col>
                 <v-col cols="auto">
                     <v-btn variant="text" color="success" @click="openSlectedPlugin">Open</v-btn>
+                </v-col>
+                <v-spacer></v-spacer>
+                <v-col cols="auto">
+                    <EditorOptions />
                 </v-col>
             </v-row>
             <v-divider class="my-2"></v-divider>
@@ -71,5 +81,28 @@ const editorUnopenedAsItems = computed(() => {
     </v-app>
 </template>
 
-<style></style>
-@/vuePlugins/stores/component
+<style>
+@keyframes identifyCol {
+    0% {
+        color: red;
+    }
+
+    49% {
+        color: red;
+    }
+
+    50% {
+        color: yellow;
+    }
+
+    100% {
+        color: yellow;
+    }
+}
+
+.identify {
+    animation-name: identifyCol;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+}
+</style>

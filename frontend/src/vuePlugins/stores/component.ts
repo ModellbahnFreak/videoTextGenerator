@@ -1,13 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useClientConfigStore } from './clientConfig';
-
-export interface ComponentMetadata {
-    indexInPlugin: number;
-    isOpened: boolean;
-    pluginUuid: string;
-    title: string
-}
+import type { ComponentMetadata } from '@videotextgenerator/api';
 
 /**
  * Store that handles loading of vue components as well as managing the state (visible/order etc.) for each client
