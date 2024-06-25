@@ -10,9 +10,11 @@ import { inject } from 'vue';
 import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
 import type { ComponentMetadata } from '@videotextgenerator/api';
 import EditorOptions from "./EditorOptions.vue";
+import { usePluginStore } from '@/vuePlugins/stores/plugin';
 
 const componentStore = useComponentStore();
 const components = loadAllEditorComponents();
+const pluginStore = usePluginStore();
 
 const clientConfigStore = useClientConfigStore();
 
@@ -34,7 +36,9 @@ function openSlectedPlugin() {
 }
 
 function getComponentName(componentData: ComponentMetadata) {
-    return componentData.title ?? (componentData.pluginUuid + "/e" + componentData.indexInPlugin)
+    const pluginName = pluginStore.pluginsByUuid[componentData.pluginUuid].plugin.pluginName ?? componentData.pluginUuid;
+    const componentName = componentData.title ?? ("e" + componentData.indexInPlugin.toString(10));
+    return pluginName + "/" + componentName;
 }
 
 const editorUnopenedAsItems = computed(() => {
@@ -74,7 +78,8 @@ const editorUnopenedAsItems = computed(() => {
                             @click="() => componentStore.editorSetOpened(i, false)"></v-btn>
                     </div>
                 </v-card-title>
-                <component :is="components[componentData.pluginUuid][componentData.indexInPlugin]">
+                <component :is="components[componentData.pluginUuid][componentData.indexInPlugin]"
+                    :api="pluginStore.pluginsByUuid[componentData.pluginUuid].api">
                 </component>
             </v-card>
         </v-main>

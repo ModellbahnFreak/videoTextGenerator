@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { useComponentStore } from '@/vuePlugins/stores/component';
 import { usePluginStore } from '@/vuePlugins/stores/plugin';
+import type { ComponentMetadata } from '@videotextgenerator/api';
 
 const componentStore = useComponentStore();
 const pluginStore = usePluginStore();
+
+function displayName(componentData: ComponentMetadata): string {
+    const pluginName = pluginStore.pluginsByUuid[componentData.pluginUuid].plugin.pluginName ?? componentData.pluginUuid;
+    const componentName = componentData.title ?? ("g" + componentData.indexInPlugin.toString(10));
+    return pluginName + "/" + componentName;
+}
 </script>
 
 <template>
@@ -17,11 +24,9 @@ const pluginStore = usePluginStore();
             <v-card title="Options">
                 <v-card-text>
                     Visible graphics
-                    <v-switch v-for="(pluginData, i) in componentStore.graphics" :key="i"
-                        :model-value="pluginData.isOpened"
-                        :label="pluginData.title ?? (pluginData.pluginUuid + '/g' + pluginData.indexInPlugin)"
-                        :hide-details="true"
-                        @update:modelValue="(state) => componentStore.graphicsSetOpened(i, state ?? false)"></v-switch>
+                    <v-switch v-for="(componentData, i) in componentStore.graphics" :key="i"
+                        :model-value="componentData.isOpened" :label="displayName(componentData)" :hide-details="true"
+                        @update:modelValue="(state: boolean) => componentStore.graphicsSetOpened(i, state ?? false)"></v-switch>
                 </v-card-text>
             </v-card>
         </template>

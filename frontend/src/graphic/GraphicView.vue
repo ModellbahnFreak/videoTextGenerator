@@ -10,6 +10,7 @@ const componentStore = useComponentStore();
 const components = loadAllGraphicsComponents();
 
 const clientConfigStore = useClientConfigStore();
+const pluginStore = usePluginStore();
 
 </script>
 
@@ -19,7 +20,8 @@ const clientConfigStore = useClientConfigStore();
     }">
         <div class="graphicContainer" v-for="(pluginData, i) in componentStore.graphics.filter(p => p.isOpened)"
             :key="i">
-            <component :is="components[pluginData.pluginUuid][pluginData.indexInPlugin]"></component>
+            <component :is="components[pluginData.pluginUuid][pluginData.indexInPlugin]"
+                :api="pluginStore.pluginsByUuid[pluginData.pluginUuid].api"></component>
         </div>
         <GraphicOptions />
     </v-app>
