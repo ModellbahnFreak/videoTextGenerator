@@ -136,6 +136,13 @@ export class ClientManager {
         socket.client = client;
         client.addSocket(socket);
 
+        this.sendNewClientConfig(client, socket);
+    }
+
+    async sendNewClientConfig(client: BackendClient, to?: ClientSocket): Promise<void> {
+        if (to && to?.client != client) {
+            return;
+        }
         let token: string | undefined;
         if (this.jwtSecret) {
             token = await new SignJWT()
@@ -154,7 +161,11 @@ export class ClientManager {
             config: client.clientModel.config,
             token
         };
-        socket.send(clientConfig);
+        if (to) {
+            to.send(clientConfig);
+        } else {
+            client.send(clientConfig);
+        }
     }
 
     async dataKey(topic: string, dataKey: string, value: unknown, version: number = -1, subversion: number = 0): Promise<void> {

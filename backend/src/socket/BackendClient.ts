@@ -23,10 +23,8 @@ export class BackendClient {
             version: instance.currentVersion, subversion: instance.currentSubversion,
             value: instance.value,
         } as WebsocketDataKeyMessage));
-        for (const [uuid, socket] of this.sockets) {
-            for (const msg of dataKeyMsgs) {
-                socket.send(msg);
-            }
+        for (const msg of dataKeyMsgs) {
+            this.send(msg);
         }
     }
 
@@ -61,9 +59,7 @@ export class BackendClient {
             type: "dataKey",
             topic, dataKey, value, version, subversion
         };
-        for (const [uuid, socket] of this.sockets) {
-            socket.send(dataKeyMsg);
-        }
+        this.send(dataKeyMsg);
     }
 
     async event(topic: string, event: string, payload: unknown, evtUuid: string) {
@@ -77,9 +73,7 @@ export class BackendClient {
             type: "event",
             topic, event, payload, evtUuid
         };
-        for (const [uuid, socket] of this.sockets) {
-            socket.send(eventMsg);
-        }
+        this.send(eventMsg);
     }
 
     async onMessage(msg: WebsocketMessage) {
@@ -114,7 +108,14 @@ export class BackendClient {
                 await this.manager.clientRepository.createIfNotExists(this.client);
                 this.client.config = clientCfgMsg.config;
                 await this.manager.clientRepository.save(this.client);
+                await this.manager.sendNewClientConfig(this);
                 break;
+        }
+    }
+
+    send(msg: WebsocketMessage) {
+        for (const [uuid, socket] of this.sockets) {
+            socket.send(msg);
         }
     }
 
