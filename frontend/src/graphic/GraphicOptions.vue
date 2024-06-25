@@ -7,6 +7,9 @@ import SharedOptions from "@/editor/SharedOptions.vue";
 const componentStore = useComponentStore();
 const pluginStore = usePluginStore();
 
+const props = defineProps(["clientConfig"]);
+const emit = defineEmits(["configChanged"]);
+
 function displayName(componentData: ComponentMetadata): string {
     const pluginName = pluginStore.pluginsByUuid[componentData.pluginUuid].plugin.pluginName ?? componentData.pluginUuid;
     const componentName = componentData.title ?? ("g" + componentData.indexInPlugin.toString(10));
@@ -24,7 +27,8 @@ function displayName(componentData: ComponentMetadata): string {
         <template v-slot:default="{ isActive }">
             <v-card title="Options">
                 <v-card-text>
-                    <SharedOptions />
+                    <SharedOptions :client-config="clientConfig"
+                        @config-changed="(newConf) => emit('configChanged', newConf)" />
                     Visible graphics
                     <v-switch v-for="(componentData, i) in componentStore.graphics" :key="i"
                         :model-value="componentData.isOpened" :label="displayName(componentData)" :hide-details="true"

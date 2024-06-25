@@ -23,7 +23,8 @@ const pluginStore = usePluginStore();
             <component :is="components[pluginData.pluginUuid][pluginData.indexInPlugin]"
                 :api="pluginStore.pluginsByUuid[pluginData.pluginUuid].api"></component>
         </div>
-        <GraphicOptions />
+        <GraphicOptions :client-config="clientConfigStore.config"
+            @config-changed="clientConfigStore.storeAndSendConfig" />
     </v-app>
 </template>
 
