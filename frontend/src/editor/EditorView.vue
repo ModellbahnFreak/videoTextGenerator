@@ -62,7 +62,8 @@ const editorUnopenedAsItems = computed(() => {
                 </v-col>
                 <v-spacer></v-spacer>
                 <v-col cols="auto">
-                    <EditorOptions client-config="clientConfiStore.config" @config-changed="clientConfigStore.storeAndSendConfig" />
+                    <EditorOptions :client-config="clientConfigStore.config"
+                        @config-changed="clientConfigStore.storeAndSendConfig" />
                 </v-col>
             </v-row>
             <v-divider class="my-2"></v-divider>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
-import { computed, ref, watch } from 'vue';
+import { ref } from 'vue';
 import SharedOptions from "./SharedOptions.vue";
 
 const { clientConfig } = defineProps(["clientConfig"]);
@@ -17,7 +16,8 @@ const isDialogOpened = ref(false);
         <template v-slot:default="{ isActive }">
             <v-card title="Options">
                 <v-card-text>
-                    <SharedOptions :is-dialog-opened="isDialogOpened" client-config="clientConfig" @config-changed="(newConf) => emit('configChanged', newConf)" />
+                    <SharedOptions :is-dialog-opened="isDialogOpened" :client-config="clientConfig"
+                        @config-changed="(newConf) => emit('configChanged', newConf)" />
                 </v-card-text>
             </v-card>
         </template>

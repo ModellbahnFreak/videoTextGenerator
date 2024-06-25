@@ -1,34 +1,36 @@
 <script setup lang="ts">
 import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
 import { computed, ref, watch } from 'vue';
-import { FrontendClientConfig } from "@videotextgenerator/api";
+import type { FrontendClientConfig } from "@videotextgenerator/api";
 
-const { isDialogOpened: boolean, clientConfig: FrontendClientConfig } = defineProps(["isDialogOpened", "clientConfig"]);
+const clientConfigStore = useClientConfigStore();
+
+const props = defineProps(["isDialogOpened", "clientConfig"]);
 const emit = defineEmits(["configChanged"]);
 
 const clientName = ref<string | null>(null);
 const clientNameModel = computed({
-    get: () => clientName.value ?? clientConfig.name ?? "",
+    get: () => clientName.value ?? (props.clientConfig as FrontendClientConfig).name ?? "",
     set: (newName: string) => { clientName.value = newName },
 });
 
 const identify = computed({
-    get: () => clientConfig.identify ?? false,
+    get: () => (props.clientConfig as FrontendClientConfig).identify ?? false,
     set: (doIdentify: boolean) => {
-        clientConfig.identify = doIdentify ? true : undefined;
-        emit("configChanged", clientConfig);
+        (props.clientConfig as FrontendClientConfig).identify = doIdentify ? true : undefined;
+        emit("configChanged", (props.clientConfig as FrontendClientConfig));
     },
 });
 
 function saveName() {
     if (clientName.value !== null) {
-        clientConfig.name = clientName.value.length == 0 ? undefined : clientName.value;
-        emit("configChanged", clientConfig);
+        (props.clientConfig as FrontendClientConfig).name = clientName.value.length == 0 ? undefined : clientName.value;
+        emit("configChanged", (props.clientConfig as FrontendClientConfig));
         clientName.value = null;
     }
 }
 
-watch(isDialogOpened as any, (isOpen) => {
+watch(props.isDialogOpened, (isOpen: boolean) => {
     if (!isOpen) {
         clientName.value = null;
     }
