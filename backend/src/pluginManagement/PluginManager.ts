@@ -26,7 +26,8 @@ export class PluginManager {
     }
 
     async loadPlugins(): Promise<void> {
-        const allFolders = await fs.readdir(path.join(__dirname, "..", "..", "plugins"), { encoding: "utf8", withFileTypes: true });
+        const pluginsDir = path.join(import.meta.dirname, "..", "..", "..", "plugins");
+        const allFolders = await fs.readdir(pluginsDir, { encoding: "utf8", withFileTypes: true });
         for (const pluginFolder of allFolders) {
             if (pluginFolder.isCharacterDevice() || pluginFolder.isFIFO() || pluginFolder.isFile() || pluginFolder.isSocket()) {
                 continue;
@@ -49,6 +50,7 @@ export class PluginManager {
                 }
             } catch (err) {
                 console.warn("Ignoring plugin " + pluginFolder.name);
+                console.log(err);
                 indexPath = undefined;
             }
             if (!indexPath) {
@@ -70,7 +72,11 @@ export class PluginManager {
                 continue;
             }
             console.log("Found plugin ", indexPath);
-            const plugin = (await import(url.pathToFileURL(indexPath).toString()))?.default as (BackendPlugin | undefined);
+            let imported = (await import(url.pathToFileURL(indexPath).toString()))?.default;
+            if (imported?.default && !imported?.uuid && !imported?.pluginName && !imported?.run) {
+                imported = imported.default;
+            }
+            const plugin = imported as (BackendPlugin | undefined);
             if (!plugin) {
                 console.log(`Ignoring plugin folder ${pluginFolder.name}. Has no default export.`);
                 continue;
@@ -79,6 +85,12 @@ export class PluginManager {
             this.pluginsByUuid.set(plugin.uuid, {
                 plugin, folderName: pluginFolder.name, api: this.createApiFor(plugin),
             });
+        }
+    }
+
+    runAllPlugins(): void { //todo: make filtering possible which Plugin is loaded
+        for (const [uuid, plugin] of this.pluginsByUuid) {
+            plugin.plugin.run(plugin.api);
         }
     }
 }

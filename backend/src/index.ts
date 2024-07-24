@@ -12,6 +12,7 @@ import { topicRepository } from "./repository/TopicRepository.js";
 import { dataKeyRepository } from "./repository/DataKeyRepository.js";
 import { EventManager } from "./data/EventManager.js";
 import { topicPermissionRepository } from "./repository/TopicPermissionRepository.js";
+import { PluginManager } from "./pluginManagement/PluginManager.js";
 
 dotenv.config({});
 
@@ -65,6 +66,10 @@ async function main() {
         });
     dataKeyManager.on(wsManager.dataKey);
     eventManager.on(wsManager.event);
+
+    const pluginMgr = new PluginManager(dataKeyManager, eventManager);
+    await pluginMgr.loadPlugins();
+    pluginMgr.runAllPlugins();
 
     console.log(`Starting backend server on port ${port}`)
     httpServer.listen(port);
