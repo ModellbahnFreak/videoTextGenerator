@@ -102,7 +102,8 @@ export class BackendClient {
                     if (this.client.type == ClientType.SERVER) {
                         //todo: pass client config set request to other client
                     } else {
-                        throw new Error("Setting config for other client only allowed for other servers => Server to server comm");
+                        console.error("Setting config for other client only allowed for other servers => Server to server comm");
+                        return;
                     }
                 }
                 await this.manager.clientRepository.createIfNotExists(this.client);
