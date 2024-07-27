@@ -1,7 +1,8 @@
 import * as dotenv from "dotenv";
 import * as path from "path";
 import * as http from "http";
-import express from "express"
+import express from "express";
+import bodyParser from "body-parser";
 import { WebSocketServer } from "ws";
 import dataSource from "./dataSource.js";
 import { SocketManager } from "./socket/SocketManager.js";
@@ -46,11 +47,6 @@ async function main() {
 
     const app = express();
     const httpServer = http.createServer(app);
-    app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
-    app.get("*", (req, res, next) => {
-        req.url = "/";
-        express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist"))(req, res, next);
-    })
 
     const dataKeyManager = new DataKeyManager(topicRepository, dataKeyRepository, topicPermissionRepository, serverClient);
     const eventManager = new EventManager();
@@ -70,6 +66,41 @@ async function main() {
     const pluginMgr = new PluginManager(dataKeyManager, eventManager);
     await pluginMgr.loadPlugins();
     pluginMgr.runAllPlugins();
+
+    app.use("/http/:topic/:type/:dataKey", bodyParser.json(), async (req, res) => {
+        try {
+            console.log(`External request for ${req.params.topic}/${req.params.type}/${req.params.dataKey}`);
+            const data = req.body;
+            if (!data) {
+                res.status(400).end(`Empty body`);
+                return;
+            }
+            console.log("Data", data);
+            switch (req.params.type.toLowerCase()) {
+                case "dataKey":
+                case "d":
+                case "k":
+                    (await dataKeyManager.for(req.params.topic, req.params.dataKey))?.set(data);
+                    res.status(200).end(`Set ${req.params.topic}/d-${req.params.dataKey}`);
+                    return;
+                case "event":
+                case "e":
+                    eventManager.raise(req.params.topic, req.params.dataKey, data);
+                    res.status(200).end(`Emitted ${req.params.topic}/e-${req.params.dataKey}`);
+                    return;
+            }
+            res.status(400).end(`Unknown type`);
+        } catch (err) {
+            console.error(`Could not set using http api`, err);
+            res.status(400).end(err);
+        }
+    });
+
+    app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
+    app.get("*", (req, res, next) => {
+        req.url = "/";
+        express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist"))(req, res, next);
+    })
 
     console.log(`Starting backend server on port ${port}`)
     httpServer.listen(port);
