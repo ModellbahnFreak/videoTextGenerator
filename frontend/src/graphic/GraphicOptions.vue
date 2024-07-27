@@ -3,12 +3,15 @@ import { useComponentStore } from '@/vuePlugins/stores/component';
 import { usePluginStore } from '@/vuePlugins/stores/plugin';
 import type { ComponentMetadata } from '@videotextgenerator/api';
 import SharedOptions from "@/editor/SharedOptions.vue";
+import { ref } from 'vue';
 
 const componentStore = useComponentStore();
 const pluginStore = usePluginStore();
 
 const props = defineProps(["clientConfig"]);
 const emit = defineEmits(["configChanged"]);
+
+const isDialogOpened = ref(false);
 
 function displayName(componentData: ComponentMetadata): string {
     const pluginName = pluginStore.pluginsByUuid[componentData.pluginUuid].plugin.pluginName ?? componentData.pluginUuid;
@@ -18,7 +21,7 @@ function displayName(componentData: ComponentMetadata): string {
 </script>
 
 <template>
-    <v-dialog max-width="500" transition="fade-transition">
+    <v-dialog max-width="500" transition="fade-transition" v-model="isDialogOpened">
         <template v-slot:activator="{ props: activatorProps }">
             <div id="graphicsOptionButtonContainer">
                 <v-btn id="graphicsOptionButton" :icon="true" v-bind="activatorProps">=</v-btn>
@@ -27,12 +30,12 @@ function displayName(componentData: ComponentMetadata): string {
         <template v-slot:default="{ isActive }">
             <v-card title="Options">
                 <v-card-text>
-                    <SharedOptions :client-config="clientConfig"
+                    <SharedOptions :is-dialog-opened="isDialogOpened" :client-config="clientConfig"
                         @config-changed="(newConf) => emit('configChanged', newConf)" />
                     Visible graphics
                     <v-switch v-for="(componentData, i) in componentStore.graphics" :key="i"
                         :model-value="componentData.isOpened" :label="displayName(componentData)" :hide-details="true"
-                        @update:modelValue="(state: boolean) => componentStore.graphicsSetOpened(i, state ?? false)"></v-switch>
+                        @update:modelValue="(state: boolean | null) => componentStore.graphicsSetOpened(i, state ?? false)"></v-switch>
                 </v-card-text>
             </v-card>
         </template>

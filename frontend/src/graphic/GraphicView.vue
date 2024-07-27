@@ -12,6 +12,8 @@ const components = loadAllGraphicsComponents();
 const clientConfigStore = useClientConfigStore();
 const pluginStore = usePluginStore();
 
+document.documentElement.style.overflow = "hidden";
+
 </script>
 
 <template>
@@ -29,7 +31,10 @@ const pluginStore = usePluginStore();
 </template>
 
 <style>
-html:has(.graphicContainer) {
+html:has(.graphicsApp),
+body:has(.graphicsApp),
+#app:has(.graphicsApp),
+.graphicsApp {
     overflow: hidden !important;
 }
 
@@ -64,5 +69,6 @@ html:has(.graphicContainer) {
 .graphicsApp {
     animation-duration: 1s;
     animation-iteration-count: infinite;
+    background: none !important;
 }
 </style>

@@ -99,13 +99,25 @@ export class SocketToBackend {
     protected loginError(msg: WebsocketErrorMessage) {
         if (msg.relatesTo?.type == "login" && !this.isLoggedIn) {
             console.log(`Login failed: ${msg.message}`);
-            const tryAgain = confirm(`Login failed with error: ${msg.message}.\nTry again as new client (clears client config)?`);
-            if (tryAgain) {
-                const loginMsg: WebsocketLoginMessage = {
-                    type: "login",
-                    token: ""
-                };
-                this.send(loginMsg);
+            const returnedToken = (msg.relatesTo as WebsocketLoginMessage).token;
+            if (returnedToken && returnedToken.length > 0) {
+                if (returnedToken == this.clientConfigStore?.token && returnedToken != this.clientConfigStore?.uuid) {
+                    console.log("Trying login via uuid");
+                    const loginMsg: WebsocketLoginMessage = {
+                        type: "login",
+                        token: this.clientConfigStore?.uuid
+                    };
+                    this.send(loginMsg);
+                } else {
+                    const tryAgain = true; //confirm(`Login failed with error: ${msg.message}.\nTry again as new client (clears client config)?`);
+                    if (tryAgain) {
+                        const loginMsg: WebsocketLoginMessage = {
+                            type: "login",
+                            token: ""
+                        };
+                        this.send(loginMsg);
+                    }
+                }
             }
         }
     }

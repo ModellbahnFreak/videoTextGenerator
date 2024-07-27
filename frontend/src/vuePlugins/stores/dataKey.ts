@@ -13,6 +13,7 @@ export const useDataKeyStore = defineStore('dataKey', () => {
     const socketsManager = ref<SocketsManager | undefined>();
 
     function setDataKeyValue(topic: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
+        console.log("Setting new data key", topic, dataKey, value);
         if (value === undefined) {
             value = null;
         }
@@ -59,10 +60,7 @@ export const useDataKeyStore = defineStore('dataKey', () => {
             Object.assign(dataKeys, { [topic]: {} });
         }
         if (!dataKeys[topic][dataKey]) {
-            const comp: DataKey<unknown> = Object.assign(computed({
-                get: () => (dataKeyValues.value[topic] ?? {})[dataKey] as Readonly<T>,
-                set: (newValue: T) => setDataKeyValue(topic, dataKey, newValue),
-            }),
+            const comp: DataKey<unknown> = Object.assign(ref(undefined),
                 {
                     async set(newValue: T): Promise<void> {
                         setDataKeyValue(topic, dataKey, newValue);
