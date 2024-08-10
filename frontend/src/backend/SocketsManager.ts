@@ -257,6 +257,14 @@ export class SocketsManager implements VuePlugin<[]> {
     get numOpenSockets(): number {
         return this.sockets.filter(socket => socket.isOpen).length;
     }
+
+    get subscribedTopics(): string[] {
+        return [...this.subscribedTopics];
+    }
+
+    public isSubscribedTo(topic: string) {
+        return this.subscribedTopcis.has(topic);
+    }
 }
 
 declare module '@vue/runtime-core' {
