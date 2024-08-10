@@ -1,36 +1,56 @@
 import type { SocketsManager } from "@/backend/SocketsManager";
 import type { DataKey, DataKeyListener, ROConsumer, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
-import { computed, ref, type Ref, type WritableComputedRef } from "vue";
+import { computed, ref, shallowRef, type Ref, type WritableComputedRef } from "vue";
+
+
+
+interface FrontendDataKey<T> extends Ref<T> {
+    set value(newValue: T);
+
+    setInternal(newValue: T, publishToServer?: boolean): void;
+
+    set(newValue: T): Promise<void>;
+
+    on(handler: ROConsumer<T>): void;
+
+    off(handler: ROConsumer<T>): void;
+
+    getKey(): string;
+
+    getTopic(): string;
+}
 
 export const useDataKeyStore = defineStore('dataKey', () => {
 
-    const dataKeyValues = ref<{ [topic: string]: { [dataKey: string]: unknown } }>({});
+    //const dataKeyValues = ref<{ [topic: string]: { [dataKey: string]: Ref<unknown> } }>({});
     const dataKeysListeners = ref<{ [topic: string]: { [dataKey: string]: Map<ROConsumer<unknown>, boolean> } }>({});
-    const dataKeys: { [topic: string]: { [dataKey: string]: DataKey<unknown> } } = {};
+    const dataKeys: { [topic: string]: { [dataKey: string]: FrontendDataKey<unknown> } } = {};
     const dataKeyVersions: { [topic: string]: { [dataKey: string]: { version: number, subversion: number } } } = {};
 
     const socketsManager = ref<SocketsManager | undefined>();
 
-    function setDataKeyValue(topic: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
-        console.log("Setting new data key", topic, dataKey, value);
-        if (value === undefined) {
-            value = null;
-        }
+    function publishDataKeyUpdate(topic: string, dataKey: string, value: unknown, sendToServer: boolean = true) {
+        console.log("Publishing new data key", topic, dataKey, value, sendToServer);
         if (sendToServer) {
             socketsManager.value?.dataKey(topic, dataKey, value, getNextDataKeyVersion(topic, dataKey), 0);
         }
-        if (!dataKeyValues.value[topic]) {
-            dataKeyValues.value[topic] = {};
-        }
-        dataKeyValues.value[topic][dataKey] = value;
-
         const listeners = (dataKeysListeners.value[topic] ?? {})[dataKey];
         if (listeners) {
             for (const [listener, listen] of listeners) {
                 listener(value as Readonly<unknown>);
             }
         }
+    }
+
+    function setDataKeyValue(topic: string, dataKey: string, value: unknown) {
+        console.log("Setting new data key", topic, dataKey, value);
+        if (value === undefined) {
+            value = null;
+        }
+        dataKeys[topic][dataKey].value = value;
+
+        publishDataKeyUpdate(topic, dataKey, value);
     }
 
     function addListener(topic: string, dataKey: string, handler: ROConsumer<unknown>) {
@@ -49,23 +69,30 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         }
     }
 
-    const test: WritableComputedRef<string> = computed({
-        get: () => "a",
-        set: (v: string) => { }
-    });
-
-    async function dataKeyFor<T>(topic: string, dataKey: string): Promise<DataKey<T>> {
+    async function dataKeyFor<T>(topic: string, dataKey: string, requestValue: boolean = true): Promise<DataKey<T>> {
         // todo: check permission to get datakey
         if (!dataKeys[topic]) {
             Object.assign(dataKeys, { [topic]: {} });
         }
         if (!dataKeys[topic][dataKey]) {
-            const comp: DataKey<unknown> = Object.assign(ref(undefined),
+            const valueRef = ref<unknown>(undefined);
+            const comp: FrontendDataKey<unknown> = Object.assign(valueRef,
                 {
-                    async set(newValue: T): Promise<void> {
-                        setDataKeyValue(topic, dataKey, newValue);
+                    valueDescriptor: Object.getOwnPropertyDescriptor(valueRef, "value"),
+                    set value(newValue: T) {
+                        this.set(newValue);
                     },
-
+                    setInternal(newValue: T, publishToServer: boolean = false) {
+                        if (this.valueDescriptor?.set) {
+                            this.valueDescriptor.set(newValue);
+                        } else {
+                            valueRef.value = newValue;
+                        }
+                        publishDataKeyUpdate(topic, dataKey, newValue, publishToServer);
+                    },
+                    async set(newValue: T): Promise<void> {
+                        this.setInternal(newValue, true);
+                    },
                     on(handler: ROConsumer<T>): void {
                         addListener(topic, dataKey, handler as ROConsumer<unknown>);
                     },
@@ -81,12 +108,25 @@ export const useDataKeyStore = defineStore('dataKey', () => {
                     }
                 });
             Object.assign(dataKeys[topic], { [dataKey]: comp });
+            console.log("Added for", topic, dataKey, comp, dataKeys[topic][dataKey]);
 
+        }
+        if (requestValue && !socketsManager.value?.isSubscribedTo(topic)) {
+            console.log("Requesting data key");
             socketsManager.value?.dataKeyRequest(topic, dataKey).then(value => {
-                setDataKeyValue(topic, dataKey, value, false);
+                dataKeys[topic][dataKey].setInternal(value);
             });
         }
         return dataKeys[topic][dataKey] as DataKey<T>;
+    }
+
+    const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value, version, subversion) => {
+        if (isDataKeyVersionNew(topic, dataKey, version, subversion)) {
+            dataKeyFor(topic, dataKey, false).then(() => {
+                console.log("dataKeys", dataKeys, topic, dataKey, dataKeys[topic], dataKeys[topic][dataKey]);
+                dataKeys[topic][dataKey].setInternal(value);
+            })
+        }
     }
 
     function getNextDataKeyVersion(topic: string, dataKey: string): number {
@@ -122,24 +162,18 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         return isNew;
     }
 
-    const onDataKeyFromServer: DataKeyListener = (topic, dataKey, value, version, subversion) => {
-        if (isDataKeyVersionNew(topic, dataKey, version, subversion)) {
-            setDataKeyValue(topic, dataKey, value, false);
-        }
-    }
-
     async function getKnownDataKeys(topic: string): Promise<string[]> {
         socketsManager.value?.send({
             type: "subscribe",
             topics: [topic]
         } as WebsocketSubscribeMessage);
-        return Object.keys(dataKeyValues.value[topic] || {});
+        return Object.keys(dataKeys[topic] || {});
     }
 
     async function getKnownTopics(): Promise<string[]> {
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
-                resolve(Object.keys(dataKeyValues.value));
+                resolve(Object.keys(dataKeys));
             }, 1000);
             socketsManager.value?.getKnownTopics().then(topics => {
                 clearTimeout(timeout);
@@ -147,11 +181,8 @@ export const useDataKeyStore = defineStore('dataKey', () => {
                     if (!dataKeys[topic]) {
                         Object.assign(dataKeys, { [topic]: {} });
                     }
-                    if (!dataKeyValues.value[topic]) {
-                        dataKeyValues.value[topic] = {};
-                    }
                 }
-                resolve(Object.keys(dataKeyValues.value));
+                resolve(Object.keys(dataKeys));
             });
         });
     }
@@ -165,8 +196,8 @@ export const useDataKeyStore = defineStore('dataKey', () => {
     }
 
     return {
-        dataKeyValues, dataKeysListeners,
-        setDataKeyValue, addListener, removeListener, dataKeyFor,
+        dataKeysListeners,
+        publishDataKeyUpdate, addListener, removeListener, dataKeyFor,
         getKnownDataKeys, getKnownTopics,
         setSocketsManager
     };
