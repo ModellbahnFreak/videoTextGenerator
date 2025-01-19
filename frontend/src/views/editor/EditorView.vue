@@ -2,15 +2,15 @@
 import '@mdi/font/css/materialdesignicons.css' // If icons are required in the graphic views, comment out this line and uncomment the equivalent line in @/vuePlugins/vuetify.ts
 import { ref } from 'vue';
 import { defineAsyncComponent, type AsyncComponentLoader } from 'vue';
-import type { SocketsManager } from "@/backend/SocketsManager";
+import type { SocketsManager } from "@/code/backend/SocketsManager";
 import { computed } from 'vue';
-import { useComponentStore } from "@/vuePlugins/stores/component"
-import { loadAllEditorComponents } from '@/PluginManager';
+import { useComponentStore } from "@/code/pluginManagement/componentStore"
+import { loadAllEditorComponents } from '@/code/pluginManagement/PluginManager';
 import { inject } from 'vue';
-import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
+import { useClientConfigStore } from '@/code/backend/clientConfigStore';
 import type { ComponentMetadata } from '@videotextgenerator/api';
 import EditorOptions from "./EditorOptions.vue";
-import { usePluginStore } from '@/vuePlugins/stores/plugin';
+import { usePluginStore } from '@/code/pluginManagement/pluginStore';
 
 const componentStore = useComponentStore();
 const components = loadAllEditorComponents();

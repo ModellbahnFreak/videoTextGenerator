@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useComponentStore } from '@/vuePlugins/stores/component';
-import { usePluginStore } from '@/vuePlugins/stores/plugin';
+import { useComponentStore } from '@/code/pluginManagement/componentStore';
+import { usePluginStore } from '@/code/pluginManagement/pluginStore';
 import type { ComponentMetadata } from '@videotextgenerator/api';
-import SharedOptions from "@/editor/SharedOptions.vue";
+import SharedOptions from "@/views/editor/SharedOptions.vue";
 import { ref } from 'vue';
 
 const componentStore = useComponentStore();

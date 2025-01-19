@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import GraphicView from '../graphic/GraphicView.vue'
+import GraphicView from '@/views/graphic/GraphicView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,7 +13,7 @@ const router = createRouter({
       path: '/editor',
       alias: ["/edit", "/e", "/operator"],
       name: 'editor',
-      component: () => import('../editor/EditorView.vue')
+      component: () => import('@/views/editor/EditorView.vue')
     }
   ]
 })

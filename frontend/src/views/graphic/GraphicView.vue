@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, ref, type AsyncComponentLoader } from 'vue';
 import GraphicOptions from "./GraphicOptions.vue"
-import { useComponentStore } from '@/vuePlugins/stores/component';
-import { usePluginStore } from '@/vuePlugins/stores/plugin';
-import { loadAllGraphicsComponents } from "@/PluginManager";
-import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
+import { useComponentStore } from '@/code/pluginManagement/componentStore';
+import { usePluginStore } from '@/code/pluginManagement/pluginStore';
+import { loadAllGraphicsComponents } from "@/code/pluginManagement/PluginManager";
+import { useClientConfigStore } from '@/code/backend/clientConfigStore';
 
 const componentStore = useComponentStore();
 const components = loadAllGraphicsComponents();

@@ -1,5 +1,5 @@
 import type { WebsocketClientConfigMessage, WebsocketErrorMessage, WebsocketLoginMessage, WebsocketMessage, WebsocketSubscribeMessage } from "@videotextgenerator/api"
-import type { useClientConfigStore } from "../vuePlugins/stores/clientConfig";
+import type { useClientConfigStore } from "./clientConfigStore";
 
 export class SocketToBackend {
     protected socket: WebSocket | undefined;

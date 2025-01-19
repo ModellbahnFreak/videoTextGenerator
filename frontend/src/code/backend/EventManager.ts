@@ -1,6 +1,6 @@
 // CAUTION: Code of EventManager.ts shared 1:1 between backend and frontend
 import type { EventListener, ListenerOptions, ROConsumer } from "@videotextgenerator/api";
-import { uuidGenerator } from "../utils.js";
+import { uuidGenerator } from "@/code/utils.js";
 
 export class EventManager {
 

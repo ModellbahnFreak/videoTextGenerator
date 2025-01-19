@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { useClientConfigStore } from './clientConfig';
+import { useClientConfigStore } from '@/code/backend/clientConfigStore';
 import type { ComponentMetadata } from '@videotextgenerator/api';
 
 /**

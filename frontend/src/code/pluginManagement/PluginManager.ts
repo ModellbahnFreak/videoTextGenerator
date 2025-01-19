@@ -1,10 +1,10 @@
 import type { FrontendPlugin } from "@videotextgenerator/api";
-import { usePluginStore } from "./vuePlugins/stores/plugin";
+import { usePluginStore } from "./pluginStore";
 import { FrontendAPI } from "./FrontendAPI";
 import { defineAsyncComponent, type AsyncComponentLoader } from "vue";
-import { useComponentStore } from "./vuePlugins/stores/component";
-import { useDataKeyStore } from "./vuePlugins/stores/dataKey";
-import type { EventManager } from "./backend/EventManager";
+import { useComponentStore } from "./componentStore";
+import { useDataKeyStore } from "../data/dataKeyStore";
+import type { EventManager } from "@/code/backend/EventManager";
 
 export async function loadPlugins(eventManager: EventManager): Promise<void> {
 
@@ -12,7 +12,7 @@ export async function loadPlugins(eventManager: EventManager): Promise<void> {
     const dataKeyStore = useDataKeyStore();
 
     const plugins = import.meta.glob([
-        "@/componentsGraphic/index.ts", "@/componentsEditor/index.ts",
+        "@/views/componentsGraphic/index.ts", "@/views/componentsEditor/index.ts",
         "@plugins/*/frontend/index.ts", "@plugins/*/frontend/index.js"
     ], { import: "default" });
 

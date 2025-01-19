@@ -1,4 +1,4 @@
-import type { SocketsManager } from "@/backend/SocketsManager";
+import type { SocketsManager } from "./SocketsManager";
 import type { FrontendClientConfig, WebsocketClientConfigMessage } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
 import { ref } from "vue";

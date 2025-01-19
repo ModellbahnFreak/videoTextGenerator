@@ -1,4 +1,4 @@
-import type { SocketsManager } from "@/backend/SocketsManager";
+import type { SocketsManager } from "@/code/backend/SocketsManager";
 import type { DataKey, DataKeyListener, ROConsumer, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
 import { computed, ref, type Ref, type WritableComputedRef } from "vue";

@@ -1,4 +1,4 @@
-import { FrontendAPI } from "@/FrontendAPI";
+import { FrontendAPI } from "@/code/pluginManagement/FrontendAPI";
 import type { FrontendPlugin } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
 import { ref } from "vue";

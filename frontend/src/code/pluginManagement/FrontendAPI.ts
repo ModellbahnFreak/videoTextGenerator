@@ -1,6 +1,6 @@
 import type { APIBase, DataKey, ROConsumer } from "@videotextgenerator/api";
-import type { useDataKeyStore } from "./vuePlugins/stores/dataKey";
-import type { EventManager } from "./backend/EventManager";
+import type { useDataKeyStore } from "../data/dataKeyStore";
+import type { EventManager } from "@/code/backend/EventManager";
 
 export class FrontendAPI implements APIBase {
     constructor(

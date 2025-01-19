@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useClientConfigStore } from '@/vuePlugins/stores/clientConfig';
+import { useClientConfigStore } from '@/code/backend/clientConfigStore';
 import { computed, ref, watch } from 'vue';
 import type { FrontendClientConfig } from "@videotextgenerator/api";
 
