@@ -1,13 +1,14 @@
 import type { SocketsManager } from "@/code/backend/SocketsManager";
 import type { DataKey, DataKeyListener, ROConsumer, WebsocketSubscribeMessage } from "@videotextgenerator/api";
 import { defineStore } from "pinia";
-import { computed, ref, type Ref, type WritableComputedRef } from "vue";
+import { computed, customRef, ref, shallowRef, type Ref, type WritableComputedRef } from "vue";
+import { FrontendDataKey } from "./FrontendDataKey";
 
 export const useDataKeyStore = defineStore('dataKey', () => {
 
-    const dataKeyValues = ref<{ [topic: string]: { [dataKey: string]: unknown } }>({});
+    const dataKeyValues = shallowRef<{ [topic: string]: { [dataKey: string]: unknown } }>({});
     const dataKeysListeners = ref<{ [topic: string]: { [dataKey: string]: Map<ROConsumer<unknown>, boolean> } }>({});
-    const dataKeys: { [topic: string]: { [dataKey: string]: DataKey<unknown> } } = {};
+    const dataKeys: { [topic: string]: { [dataKey: string]: FrontendDataKey<unknown> & Ref<unknown> } } = {};
     const dataKeyVersions: { [topic: string]: { [dataKey: string]: { version: number, subversion: number } } } = {};
 
     const socketsManager = ref<SocketsManager | undefined>();
@@ -24,6 +25,12 @@ export const useDataKeyStore = defineStore('dataKey', () => {
             dataKeyValues.value[topic] = {};
         }
         dataKeyValues.value[topic][dataKey] = value;
+
+        const reactiveVal = (dataKeys[topic] ?? {})[dataKey]?.setInternal(value);
+        if (reactiveVal) {
+            value = reactiveVal;
+            dataKeyValues.value[topic][dataKey] = reactiveVal;
+        }
 
         const listeners = (dataKeysListeners.value[topic] ?? {})[dataKey];
         if (listeners) {
@@ -49,38 +56,15 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         }
     }
 
-    const test: WritableComputedRef<string> = computed({
-        get: () => "a",
-        set: (v: string) => { }
-    });
-
     async function dataKeyFor<T>(topic: string, dataKey: string): Promise<DataKey<T>> {
         // todo: check permission to get datakey
         if (!dataKeys[topic]) {
             Object.assign(dataKeys, { [topic]: {} });
         }
         if (!dataKeys[topic][dataKey]) {
-            const comp: DataKey<unknown> = Object.assign(ref(undefined),
-                {
-                    async set(newValue: T): Promise<void> {
-                        setDataKeyValue(topic, dataKey, newValue);
-                    },
 
-                    on(handler: ROConsumer<T>): void {
-                        addListener(topic, dataKey, handler as ROConsumer<unknown>);
-                    },
-
-                    off(handler: ROConsumer<T>): void {
-                        removeListener(topic, dataKey, handler as ROConsumer<unknown>);
-                    },
-                    getKey(): string {
-                        return dataKey;
-                    },
-                    getTopic(): string {
-                        return topic;
-                    }
-                });
-            Object.assign(dataKeys[topic], { [dataKey]: comp });
+            const frontendDataKey = FrontendDataKey.create<T>(topic, dataKey, useDataKeyStore());
+            Object.assign(dataKeys[topic], { [dataKey]: frontendDataKey });
 
             socketsManager.value?.dataKeyRequest(topic, dataKey).then(value => {
                 setDataKeyValue(topic, dataKey, value, false);
