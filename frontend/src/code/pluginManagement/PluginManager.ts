@@ -19,7 +19,7 @@ export async function loadPlugins(eventManager: EventManager): Promise<void> {
     console.log("Found plugins: ", plugins);
 
     for (const pluginPath in plugins) {
-        const isIncluded = pluginPath.match(/^\/src\/(componentsGraphic|componentsEditor)\/index.ts$/);
+        const isIncluded = pluginPath.match(/^\/src\/views\/(componentsGraphic|componentsEditor)\/index.ts$/);
         const folderName = isIncluded ? "/included" : (pluginPath.match(/plugins\/([\w\- ]+)\/frontend\/index/) ?? [])[1];
         if (!folderName) {
             throw new Error(`Incompatible path to plugin: ${pluginPath}`);
