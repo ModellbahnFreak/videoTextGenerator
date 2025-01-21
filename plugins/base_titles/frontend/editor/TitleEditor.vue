@@ -1,10 +1,11 @@
 <script setup lang="ts">
 
-import { ref, watch, Ref } from "vue";
+import { ref, watch, Ref, inject } from "vue";
 import baseTitles, { LowerThirdDataKey } from "../index";
+import type { APIBase, DataKey } from "@videotextgenerator/api";
 
-const api = await baseTitles.api;
-const lowerThird = await api.getDataKey<LowerThirdDataKey>("lowerThird");
+const api = inject<APIBase>("api");
+const lowerThird = await api?.getDataKey<LowerThirdDataKey>("lowerThird");
 
 const selectedTitle = ref("lowerThird");
 

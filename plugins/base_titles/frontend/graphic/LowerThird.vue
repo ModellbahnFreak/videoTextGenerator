@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import baseTitles from "../index";
 import { LowerThirdDataKey } from "../index";
-import { computed, watch, Ref, ref } from 'vue';
+import { computed, watch, Ref, ref, inject } from 'vue';
+import type { APIBase, DataKey } from "@videotextgenerator/api";
 
 const LOWER_THIRD_WIDTH = "84vw";
 
-const api = await baseTitles.api
+const api = inject<APIBase>("api");
 
-const lowerThird = await api.getDataKey<LowerThirdDataKey>("lowerThird");
+const lowerThird = await api?.getDataKey("lowerThird") as (DataKey<LowerThirdDataKey> & Ref<LowerThirdDataKey>);
 
 const isLogoActive = computed(() => {
     return lowerThird?.value?.logoUrl && lowerThird.value.logoUrl.length > 0
@@ -16,9 +17,7 @@ const isLogoActive = computed(() => {
 const outerWidth = ref("0");
 const innerOpacity = ref("0");
 
-
-watch(lowerThird as unknown as Ref<unknown>, (newState: LowerThirdDataKey, oldState: LowerThirdDataKey) => {
-    console.log("Watch", newState, oldState);
+lowerThird.on(newState => {
     if (newState?.isActive) {
         outerWidth.value = LOWER_THIRD_WIDTH;
         setTimeout(() => {
@@ -83,9 +82,9 @@ watch(lowerThird as unknown as Ref<unknown>, (newState: LowerThirdDataKey, oldSt
 <template>
     <div class="lowerThirdOuterContainer" :style="{ width: outerWidth }">
         <v-row class="lowerThirdContainer" :style="{
-        height: !!lowerThird?.subtitle ? '12.5vh' : '9vh',
-        opacity: innerOpacity
-    }">
+            height: !!lowerThird?.subtitle ? '12.5vh' : '9vh',
+            opacity: innerOpacity
+        }">
             <v-col style="flex-grow: 0; flex-shrink:0;height:100%;" class="pa-0 mr-3 d-flex align-center">
                 <img :src="lowerThird?.logoUrl" style="height: 8.5vh;"
                     :style="{ 'display': isLogoActive ? undefined : 'none' }" />
