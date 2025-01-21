@@ -1,16 +1,20 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, inject, onMounted, ref, type Ref } from 'vue';
 import includedEditorsComponents from "./index";
 import { shallowRef } from 'vue';
 import type { DataKey } from "@videotextgenerator/api";
 import { watch } from 'vue';
+import { FrontendAPI } from '@/code/pluginManagement/FrontendAPI';
 
 const topic = ref("IncludedEditors");
 const dataKey = ref("Test");
 const valueStr = ref<string | null>(null);
 const latestEvent = ref("");
 
-const api = await includedEditorsComponents.api
+const api = inject<FrontendAPI>("api")!;
+if (!api) {
+    throw new Error("Api was not injected");
+}
 let currDataKey = shallowRef<{ dataKey: DataKey<unknown> | null }>({ dataKey: null });
 changeDataKey();
 
@@ -74,6 +78,7 @@ watch(topic, async (newTopic) => {
     const keys = await api.knownDataKeys(topic.value);
     knownDataKeys.value = keys;
 })
+
 </script>
 
 <template>

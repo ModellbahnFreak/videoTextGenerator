@@ -11,6 +11,7 @@ import { useClientConfigStore } from '@/code/backend/clientConfigStore';
 import type { ComponentMetadata } from '@videotextgenerator/api';
 import EditorOptions from "./EditorOptions.vue";
 import { usePluginStore } from '@/code/pluginManagement/pluginStore';
+import ComponentEditorCard from './EditorComponentContainer.vue';
 
 const componentStore = useComponentStore();
 const components = loadAllEditorComponents();
@@ -69,19 +70,9 @@ const editorUnopenedAsItems = computed(() => {
             <v-divider class="my-2"></v-divider>
             <v-card v-for="(componentData, i) in componentStore.editors" :key="i" v-show="componentData.isOpened"
                 class="ma-2">
-                <v-card-title class="d-flex">
-                    <div class="flex-0-0">
-                        {{ getComponentName(componentData) }}
-                    </div>
-                    <v-spacer />
-                    <div class="flex-0-0">
-                        <v-btn icon="mdi-close" variant="text" size="small" color="error"
-                            @click="() => componentStore.editorSetOpened(i, false)"></v-btn>
-                    </div>
-                </v-card-title>
-                <component :is="components[componentData.pluginUuid][componentData.indexInPlugin]"
-                    :api="pluginStore.pluginsByUuid[componentData.pluginUuid].api">
-                </component>
+                <ComponentEditorCard :metadata="componentData" :i="i"
+                    :component="components[componentData.pluginUuid][componentData.indexInPlugin]"
+                    :name="getComponentName(componentData)" />
             </v-card>
         </v-main>
     </v-app>

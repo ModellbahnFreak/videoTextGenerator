@@ -2,15 +2,14 @@
 import { computed, defineAsyncComponent, ref, type AsyncComponentLoader } from 'vue';
 import GraphicOptions from "./GraphicOptions.vue"
 import { useComponentStore } from '@/code/pluginManagement/componentStore';
-import { usePluginStore } from '@/code/pluginManagement/pluginStore';
 import { loadAllGraphicsComponents } from "@/code/pluginManagement/PluginManager";
 import { useClientConfigStore } from '@/code/backend/clientConfigStore';
+import GraphicComponentContainer from "./GraphicComponentContainer.vue";
 
 const componentStore = useComponentStore();
 const components = loadAllGraphicsComponents();
 
 const clientConfigStore = useClientConfigStore();
-const pluginStore = usePluginStore();
 
 document.documentElement.style.overflow = "hidden";
 
@@ -22,8 +21,9 @@ document.documentElement.style.overflow = "hidden";
     }">
         <div class="graphicContainer" v-for="(pluginData, i) in componentStore.graphics.filter(p => p.isOpened)"
             :key="i">
-            <component :is="components[pluginData.pluginUuid][pluginData.indexInPlugin]"
-                :api="pluginStore.pluginsByUuid[pluginData.pluginUuid].api"></component>
+            <GraphicComponentContainer :component="components[pluginData.pluginUuid][pluginData.indexInPlugin]"
+                :metadata="pluginData">
+            </GraphicComponentContainer>
         </div>
         <GraphicOptions :client-config="clientConfigStore.config"
             @config-changed="clientConfigStore.storeAndSendConfig" />

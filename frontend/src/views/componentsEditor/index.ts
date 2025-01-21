@@ -4,9 +4,7 @@ class IncludedEditorsComponents implements FrontendPlugin {
     public readonly pluginName = "Included Editors";
     public readonly uuid = "IncludedEditors";
 
-    // Allows awaiting "api" from the components in case it gets injected after the plugin is loaded
-    public api: Promise<APIBase> = new Promise((resolve, reject) => this.run = resolve);
-    public run = (api: APIBase) => { this.api = Promise.resolve(api) };
+    public run(api: APIBase) { }
 
     getGraphicComponents(): NamedComponent[] {
         return [];
