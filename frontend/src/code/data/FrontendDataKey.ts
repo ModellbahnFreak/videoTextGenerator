@@ -6,8 +6,10 @@ export class FrontendDataKey<T> /* Class does not implement DataKey<T>, needs to
     static create<U>(
         topic: string,
         dataKey: string,
-        dataKeyStore: ReturnType<typeof useDataKeyStore>): DataKey<U> {
-        const createdDataKey = new FrontendDataKey<U>(topic, dataKey, dataKeyStore);
+        dataKeyStore: ReturnType<typeof useDataKeyStore>,
+        defaultVal?: U,
+    ): DataKey<U> {
+        const createdDataKey = new FrontendDataKey<U>(topic, dataKey, dataKeyStore, defaultVal);
         const dataKeyRef = customRef<U>((track, trigger) => {
             createdDataKey.track = track;
             createdDataKey.trigger = trigger;
@@ -31,7 +33,18 @@ export class FrontendDataKey<T> /* Class does not implement DataKey<T>, needs to
         private readonly topic: string,
         private readonly dataKey: string,
         private readonly dataKeyStore: ReturnType<typeof useDataKeyStore>,
-    ) { }
+        private defaultValue?: T,
+    ) {
+        if (this.defaultValue) {
+            this.dataKeyStore.setDataKeyValue(this.topic, this.dataKey, this.defaultValue, false);
+        }
+    }
+
+    public replaceDefaultValue(defaultValue?: T) {
+        if (defaultValue !== null && defaultValue !== undefined) {
+            this.defaultValue = defaultValue;
+        }
+    }
 
     private updateWatcher(newValue: T) {
         if (this.stopWatcher) {
@@ -50,6 +63,9 @@ export class FrontendDataKey<T> /* Class does not implement DataKey<T>, needs to
 
     async set(newValue: T): Promise<void> {
         console.log(`${Date.now()}: Data key ${this.dataKey} was set`);
+        if ((newValue === undefined || newValue === null) && this.defaultValue) {
+            newValue = this.defaultValue;
+        }
         const reactiveVal = this.updateWatcher(newValue);
         if (reactiveVal) {
             await this.dataKeyStore.setDataKeyValue(this.topic, this.dataKey, reactiveVal);
@@ -58,7 +74,10 @@ export class FrontendDataKey<T> /* Class does not implement DataKey<T>, needs to
         }
         this.trigger();
     }
-    setInternal(newValue: T) {
+    setInternal(newValue: T): ReturnType<typeof FrontendDataKey.prototype.updateWatcher> {
+        if ((newValue === undefined || newValue === null) && this.defaultValue) {
+            newValue = this.defaultValue;
+        }
         const reactiveVal = this.updateWatcher(newValue);
         this.trigger();
         return reactiveVal;
@@ -66,6 +85,9 @@ export class FrontendDataKey<T> /* Class does not implement DataKey<T>, needs to
 
     get(): T {
         this.track();
+        return this.getInternal();
+    }
+    getInternal(): T {
         return (this.dataKeyStore.dataKeyValues[this.topic] ?? {})[this.dataKey] as T;
     }
 

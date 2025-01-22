@@ -13,7 +13,8 @@ export class BackendAPI implements APIBase {
 
     }
 
-    async getDataKey<T>(keyName: string, topic?: string | undefined): Promise<IDataKey<T> | null> {
+    async getDataKey<T>(keyName: string, topic?: string | undefined, defaultValue?: T): Promise<IDataKey<T> | null> {
+        // todo: implement default value
         console.log("API called", keyName, topic ?? this.pluginUuid);
         return this.dataKeyManager.for<T>(topic ?? this.pluginUuid, keyName);
     }

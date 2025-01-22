@@ -5,7 +5,7 @@ import { computed, customRef, ref, shallowRef, type Ref, type WritableComputedRe
 import { FrontendDataKey } from "./FrontendDataKey";
 
 export const useDataKeyStore = defineStore('dataKey', () => {
-
+    // TODO: Evaluate wether this needs to be a store (if so, make it a valid store), if not, make it an idependant plugin
     const dataKeyValues = shallowRef<{ [topic: string]: { [dataKey: string]: unknown } }>({});
     const dataKeysListeners = ref<{ [topic: string]: { [dataKey: string]: Map<ROConsumer<unknown>, boolean> } }>({});
     const dataKeys: { [topic: string]: { [dataKey: string]: FrontendDataKey<unknown> & Ref<unknown> } } = {};
@@ -56,20 +56,21 @@ export const useDataKeyStore = defineStore('dataKey', () => {
         }
     }
 
-    async function dataKeyFor<T>(topic: string, dataKey: string): Promise<DataKey<T>> {
+    async function dataKeyFor<T>(topic: string, dataKey: string, defaultVal?: T): Promise<DataKey<T>> {
         // todo: check permission to get datakey
         if (!dataKeys[topic]) {
             Object.assign(dataKeys, { [topic]: {} });
         }
         if (!dataKeys[topic][dataKey]) {
 
-            const frontendDataKey = FrontendDataKey.create<T>(topic, dataKey, useDataKeyStore());
+            const frontendDataKey = FrontendDataKey.create<T>(topic, dataKey, useDataKeyStore(), defaultVal);
             Object.assign(dataKeys[topic], { [dataKey]: frontendDataKey });
 
             socketsManager.value?.dataKeyRequest(topic, dataKey).then(value => {
                 setDataKeyValue(topic, dataKey, value, false);
             });
         }
+        dataKeys[topic][dataKey].replaceDefaultValue(defaultVal);
         return dataKeys[topic][dataKey] as DataKey<T>;
     }
 
