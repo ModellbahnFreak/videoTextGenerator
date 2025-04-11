@@ -14,7 +14,8 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@plugins': fileURLToPath(new URL('../plugins', import.meta.url))
-    }
+    },
+    preserveSymlinks: true,
   },
   server: {
     proxy: {
