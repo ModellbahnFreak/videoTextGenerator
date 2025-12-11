@@ -58,7 +58,7 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     }
 
     async set(newValue: T): Promise<void> {
-        if (newValue === undefined) {
+        /*if (newValue === undefined) {
             newValue = null as T;
         }
         await this.reload();
@@ -70,7 +70,8 @@ export class BackendDataKey<T> implements IDatakKey<T> {
             }),
             this.callListeners(newValue)
         ]);
-        await this.reload();
+        await this.reload();*/
+        await this.received(newValue, this.dataKey.version + 1, 0, this.serverClient);
     }
 
     on(handler: ROConsumer<T> | DataKeyListener, once: boolean = false): void {
@@ -95,53 +96,58 @@ export class BackendDataKey<T> implements IDatakKey<T> {
     }
 
     async received(value: unknown, version: number, subversion: number, fromClient: Client): Promise<void> {
-        // conflic resolution: 
-        // - If newVersion > oldVersion => save as newVersion.0
-        // - If newVersion == oldVersion and newClient > oldClient => save as oldVersion.(max(oldSubversion + 1, newSubversion))
-        // - Optional: if newVersion == oldVersion and newClient == oldClient and newSubversion > oldSubversion => save as oldVersion.(newSubversion)
+        try {
+            // conflic resolution: 
+            // - If newVersion > oldVersion => save as newVersion.0
+            // - If newVersion == oldVersion and newClient > oldClient => save as oldVersion.(max(oldSubversion + 1, newSubversion))
+            // - Optional: if newVersion == oldVersion and newClient == oldClient and newSubversion > oldSubversion => save as oldVersion.(newSubversion)
 
-        // In SQL: Only update, if newVersion > oldVersion or (newVersion == oldVersion && newSubversion > oldSubversion)
+            // In SQL: Only update, if newVersion > oldVersion or (newVersion == oldVersion && newSubversion > oldSubversion)
 
-        console.log(Date.now() + ": Pre updating");
-        const newDataKey = {
-            ...this.dataKey,
-            value,
-            version,
-            subversion,
-            createdByUuid: fromClient.uuid
-        };
-        const wasCreated = await this.reload(newDataKey);
-        if (wasCreated) {
-            this.callListeners();
-            return;
-        }
-        if (
-            this.dataKey.version < version ||
-            (this.dataKey.version > (4294967295 - 5) && version < 5) ||
-            (this.dataKey.version == version && this.dataKey.createdByUuid.localeCompare(fromClient.uuid) < 0)
-        ) {
-            this.dataKey.value = value;
-            this.dataKey.version = version;
-            this.dataKey.createdBy = Promise.resolve(fromClient);
-            this.dataKey.createdByUuid = fromClient.uuid;
-            this.dataKey.subversion = version > this.dataKey.version
-                ? Math.floor(Math.max(this.dataKey.subversion, subversion) / 2) * 2 + 1
-                : 1;
-            console.log(Date.now() + `: Calling listeners with ${this.dataKey.version}.${this.dataKey.subversion}`);
-            this.callListeners();
-        }
-
-        this.dataKeyRepository.versionUpdate(newDataKey).then(async setSuccess => {
-            const recreated = await this.reload(this.dataKey);
-            if (setSuccess || recreated) {
-                console.log(Date.now() + ": Updated");
-                console.log(`Created version ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key}`);
+            console.log(Date.now() + ": Pre updating");
+            const newDataKey = {
+                ...this.dataKey,
+                value,
+                version,
+                subversion,
+                createdByUuid: fromClient.uuid
+            };
+            new Date().toISOString
+            const wasCreated = await this.reload(newDataKey);
+            if (wasCreated) {
                 this.callListeners();
-            } else {
-                console.log(Date.now() + ": Not Updated");
-                console.log(`No new version as ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key} alsready exists`);
+                return;
             }
-        });
+            if (
+                this.dataKey.version < version ||
+                (this.dataKey.version > (4294967295 - 5) && version < 5) ||
+                (this.dataKey.version == version && this.dataKey.createdByUuid.localeCompare(fromClient.uuid) < 0)
+            ) {
+                this.dataKey.value = value;
+                this.dataKey.version = version;
+                this.dataKey.createdBy = Promise.resolve(fromClient);
+                this.dataKey.createdByUuid = fromClient.uuid;
+                this.dataKey.subversion = version > this.dataKey.version
+                    ? Math.floor(Math.max(this.dataKey.subversion, subversion) / 2) * 2 + 1
+                    : 1;
+                console.log(Date.now() + `: Calling listeners with ${this.dataKey.version}.${this.dataKey.subversion}`);
+                this.callListeners();
+            }
+
+            this.dataKeyRepository.versionUpdate(newDataKey).then(async setSuccess => {
+                const recreated = await this.reload(this.dataKey);
+                if (setSuccess || recreated) {
+                    console.log(Date.now() + ": Updated");
+                    console.log(`Created version ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key}`);
+                    this.callListeners();
+                } else {
+                    console.log(Date.now() + ": Not Updated");
+                    console.log(`No new version as ${this.currentVersion}.${this.currentSubversion} of ${this.dataKey.topicIdOrName}/d-${this.dataKey.key} alsready exists`);
+                }
+            });
+        } catch (err) {
+            console.error(`WFT error`, err);
+        }
 
         /*const reloaded = await this.dataKeyRepository.findByName(this.dataKey.topicIdOrName, this.dataKey.key);
         if (reloaded) {

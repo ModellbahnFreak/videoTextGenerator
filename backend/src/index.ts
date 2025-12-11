@@ -67,12 +67,31 @@ async function main() {
     await pluginMgr.loadPlugins();
     pluginMgr.runAllPlugins();
 
-    app.use("/http/:topic/:type/:dataKey", bodyParser.json(), async (req, res) => {
+    app.get("/http/:topic/:type/:dataKey", async (req, res) => {
+        switch (req.params.type.toLowerCase()) {
+            case "dataKey":
+            case "d":
+            case "k":
+                res.status(200).end(JSON.stringify((await dataKeyManager.for(req.params.topic, req.params.dataKey))?.value));
+                return;
+            case "event":
+            case "e":
+                res.status(200).end(`{}`);
+                return;
+        }
+    });
+
+    app.post("/http/:topic/:type/:dataKey/:mode?", bodyParser.json(), async (req, res) => {
         try {
             console.log(`External request for ${req.params.topic}/${req.params.type}/${req.params.dataKey}`);
             const data = req.body;
             if (!data) {
-                res.status(400).end(`Empty body`);
+                res.status(400).end(JSON.stringify({ code: 400, msg: `Empty body` }));
+                return;
+            }
+            const mode = req.params.mode ?? 'set'
+            if (mode != 'set' && mode != 'merge') {
+                res.status(400).end(JSON.stringify({ code: 400, msg: `Unknown mode` }));
                 return;
             }
             console.log("Data", data);
@@ -80,19 +99,41 @@ async function main() {
                 case "dataKey":
                 case "d":
                 case "k":
-                    (await dataKeyManager.for(req.params.topic, req.params.dataKey))?.set(data);
-                    res.status(200).end(`Set ${req.params.topic}/d-${req.params.dataKey}`);
-                    return;
+                    const dataKey = (await dataKeyManager.for(req.params.topic, req.params.dataKey));
+                    switch (mode) {
+                        case 'merge':
+                            if (dataKey) {
+                                if (typeof dataKey.value == 'object') {
+                                    dataKey.set({ ...dataKey.value, ...data });
+                                } else if (typeof dataKey.value == 'string' || typeof dataKey.value == 'number') {
+                                    dataKey.set(dataKey.value + data);
+                                } else if (typeof dataKey.value == 'boolean') {
+                                    if (data) {
+                                        dataKey.set(!dataKey.value);
+                                    }
+                                } else {
+                                    res.status(400).end(JSON.stringify({ code: 400, msg: `Merge not supported on ${req.params.topic}/d-${req.params.dataKey}` }));
+                                    return;
+                                }
+                                res.status(200).end(JSON.stringify({ code: 200, msg: `Merged ${req.params.topic}/d-${req.params.dataKey}`, value: dataKey?.value }));
+                                return;
+                            }
+                        case 'set':
+                        default:
+                            dataKey?.set(data);
+                            res.status(200).end(JSON.stringify({ code: 200, msg: `Set ${req.params.topic}/d-${req.params.dataKey}`, value: dataKey?.value }));
+                            return;
+                    }
                 case "event":
                 case "e":
                     eventManager.raise(req.params.topic, req.params.dataKey, data);
-                    res.status(200).end(`Emitted ${req.params.topic}/e-${req.params.dataKey}`);
+                    res.status(200).end(JSON.stringify({ code: 200, msg: `Emitted ${req.params.topic}/e-${req.params.dataKey}` }));
                     return;
             }
-            res.status(400).end(`Unknown type`);
+            res.status(400).end(JSON.stringify({ code: 200, msg: `Unknown type` }));
         } catch (err) {
             console.error(`Could not set using http api`, err);
-            res.status(400).end(err);
+            res.status(400).end(JSON.stringify({ code: 200, msg: err }));
         }
     });
 
