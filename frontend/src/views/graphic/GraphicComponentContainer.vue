@@ -14,5 +14,10 @@ provide("api", pluginStore.pluginsByUuid[props.metadata.pluginUuid].api);
 </script>
 
 <template>
-    <component :is="component" :api="pluginStore.pluginsByUuid[props.metadata.pluginUuid].api"></component>
+    <Suspense>
+        <component :is="component" :api="pluginStore.pluginsByUuid[props.metadata.pluginUuid].api"></component>
+        <template #fallback>
+            Loading view from {{ pluginStore.pluginsByUuid[props.metadata.pluginUuid].folderName }}...
+        </template>
+    </Suspense>
 </template>

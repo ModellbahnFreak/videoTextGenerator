@@ -31,7 +31,8 @@ export default defineConfig({
       strict: true,
       allow: [
         ".",
-        "../node_modules/@mdi/font/fonts"
+        "../node_modules/@mdi/font/fonts",
+        "../node_modules/vuetify/lib",
       ]
     }
   }

@@ -28,6 +28,11 @@ provide("api", pluginStore.pluginsByUuid[props.metadata.pluginUuid].api);
                 @click="() => componentStore.editorSetOpened(i, false)"></v-btn>
         </div>
     </v-card-title>
-    <component :is="props.component" :api="pluginStore.pluginsByUuid[props.metadata.pluginUuid].api">
-    </component>
+    <Suspense>
+        <component :is="props.component" :api="pluginStore.pluginsByUuid[props.metadata.pluginUuid].api">
+        </component>
+        <template #fallback>
+            Loading Editor from {{ pluginStore.pluginsByUuid[props.metadata.pluginUuid].folderName }}...
+        </template>
+    </Suspense>
 </template>

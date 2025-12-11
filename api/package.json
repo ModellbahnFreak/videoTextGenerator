@@ -2,7 +2,8 @@
   "name": "@videotextgenerator/api",
   "version": "2.0.0",
   "description": "API description and type definitions that can be required by plugins to be typed",
-  "main": "out/index.js",
+  "main": "",
+  "types": "out/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
