@@ -14,6 +14,7 @@ import { dataKeyRepository } from "./repository/DataKeyRepository.js";
 import { EventManager } from "./data/EventManager.js";
 import { topicPermissionRepository } from "./repository/TopicPermissionRepository.js";
 import { PluginManager } from "./pluginManagement/PluginManager.js";
+import { staticServer } from "./static-server.js";
 
 dotenv.config({});
 
@@ -130,13 +131,14 @@ async function main() {
                     res.status(200).end(JSON.stringify({ code: 200, msg: `Emitted ${req.params.topic}/e-${req.params.dataKey}` }));
                     return;
             }
-            res.status(400).end(JSON.stringify({ code: 200, msg: `Unknown type` }));
+            res.status(400).end(JSON.stringify({ code: 400, msg: `Unknown type` }));
         } catch (err) {
             console.error(`Could not set using http api`, err);
-            res.status(400).end(JSON.stringify({ code: 200, msg: err }));
+            res.status(400).end(JSON.stringify({ code: 400, msg: err }));
         }
     });
 
+    app.get("/static/:pluginUuid/:filepath(*)", staticServer(pluginMgr));
     app.use(express.static(path.join(import.meta.dirname, "..", "..", "frontend", "dist")));
     app.get("*", (req, res, next) => {
         req.url = "/";

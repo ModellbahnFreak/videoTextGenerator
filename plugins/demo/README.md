@@ -14,6 +14,9 @@
 + backend
 | |
 | + ...
++ static
+| |
+| + ...
 + package.json
 + (tsconfig.json)
 ```
@@ -41,3 +44,7 @@
 - The file referenced in `package.json` under `exports["./backend"]` will be included
     - It MUST provide an _instance_ of `BackendPlugin` as default export
 - Alternative: Have a `index.js` in the folder `frontend` or `out/frontend`
+
+### Static files
+- All files places in the `static` directory of the plugin will be served under `/static/[PLUGIN_UUID]/...`
+- WARNING: All static files are publicly readable and are not subject to client/plugin permission rules

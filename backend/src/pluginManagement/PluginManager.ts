@@ -93,4 +93,12 @@ export class PluginManager {
             plugin.plugin.run(plugin.api);
         }
     }
+
+    getPathOfPlugin(uuid: string): string|null {
+        const plugin = this.pluginsByUuid.get(uuid);
+        if (!plugin) {
+            return null;
+        }
+        return path.join(import.meta.dirname, "..", "..", "..", "plugins", plugin.folderName)
+    }
 }

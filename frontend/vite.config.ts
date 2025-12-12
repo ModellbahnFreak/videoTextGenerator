@@ -25,6 +25,12 @@ export default defineConfig({
         secure: false,
         changeOrigin: false,
         xfwd: true,
+      },
+      "/static": {
+        target: "http://localhost:8088",
+        secure: false,
+        changeOrigin: false,
+        xfwd: true,
       }
     },
     fs: {
