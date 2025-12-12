@@ -106,7 +106,8 @@ export class BackendDataKey<T> implements IDatakKey<T> {
 
             console.log(Date.now() + ": Pre updating");
             const newDataKey = {
-                ...this.dataKey,
+                key: this.dataKey.key,
+                topicIdOrName: this.dataKey.topicIdOrName,
                 value,
                 version,
                 subversion,
