@@ -8,7 +8,8 @@ class BaseTitlesPluginFrontend implements FrontendPlugin {
 
     getGraphicComponents() {
         return [
-            { title: "Lower Third", component: () => import("./graphic/LowerThird.vue") }
+            { title: "Lower Third", component: () => import("./graphic/LowerThird.vue") },
+            { title: "Notice Banner", component: () => import("./graphic/NoticeBanner.vue") }
         ]
     }
     getEditorComponents() {
@@ -24,4 +25,13 @@ export interface LowerThirdDataKey {
     text: string,
     subtitle: string,
     logoUrl: string
+}
+
+export interface NoticeBannerDataKey {
+    isActive: boolean,
+    title: string,
+    text: string,
+    bgColor: string,
+    color?: string,
+    paddingLeft?: number,
 }
