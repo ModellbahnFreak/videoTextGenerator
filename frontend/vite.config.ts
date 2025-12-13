@@ -41,5 +41,10 @@ export default defineConfig({
         "../node_modules/vuetify/lib",
       ]
     }
+  },
+  build: {
+    rollupOptions: {
+      external: /\/static\/.*/
+    }
   }
 })

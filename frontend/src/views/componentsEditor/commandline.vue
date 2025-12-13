@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, type Ref } from 'vue';
+import { computed, inject, onMounted, ref, toRaw, type Ref } from 'vue';
 import includedEditorsComponents from "./index";
 import { shallowRef } from 'vue';
 import type { DataKey } from "@videotextgenerator/api";
 import { watch } from 'vue';
 import { FrontendAPI } from '@/code/pluginManagement/FrontendAPI';
+import { usePluginStore } from '@/code/pluginManagement/pluginStore';
 
-const topic = ref("IncludedEditors");
+const topic = ref({ title: "IncludedEditors", value: "IncludedEditors" });
 const dataKey = ref("Test");
 const valueStr = ref<string | null>(null);
 const latestEvent = ref("");
+const plugins = usePluginStore();
 
 const api = inject<FrontendAPI>("api")!;
 if (!api) {
@@ -24,11 +26,19 @@ function eventListener(payload: any) {
 
 async function changeDataKey() {
     api.off(currDataKey.value.dataKey?.getKey() ?? dataKey.value, eventListener, currDataKey.value.dataKey?.getTopic());
-    currDataKey.value = { dataKey: await api.getDataKey(dataKey.value, topic.value) };
-    api.on(dataKey.value, eventListener, topic.value);
+    currDataKey.value = { dataKey: await api.getDataKey(dataKey.value, topic.value.value) };
+    api.on(dataKey.value, eventListener, topic.value.value);
     latestEvent.value = "";
-    api.knownTopics().then(topics => knownTopics.value = topics);
-    api.knownDataKeys(topic.value).then(keys => knownDataKeys.value = keys);
+    api.knownTopics().then(topics => {
+        knownTopics.value = topics.map(t => {
+            const p = plugins.pluginsByUuid[t];
+            return {
+                value: t,
+                title: t + " " + (p?.plugin?.pluginName ?? p?.folderName ?? "")
+            };
+        })
+    });
+    api.knownDataKeys(topic.value.value).then(keys => knownDataKeys.value = keys);
 }
 
 async function setValue() {
@@ -46,7 +56,7 @@ async function raiseEvent() {
     try {
         valueParsed = JSON.parse(valueParsed);
     } catch { }
-    api.raise(dataKey.value, valueParsed, topic.value);
+    api.raise(dataKey.value, valueParsed, topic.value.value);
     valueStr.value = null;
 }
 
@@ -71,11 +81,12 @@ const prettyprintJson = computed(() => {
     return str;
 });
 
-const knownTopics = ref<string[]>([]);
+const knownTopics = ref<{ title: string, value: string }[]>([]);
 const knownDataKeys = ref<string[]>([]);
 
 watch(topic, async (newTopic) => {
-    const keys = await api.knownDataKeys(topic.value);
+    console.log("New topic", newTopic.value);
+    const keys = await api.knownDataKeys(topic.value.value);
     knownDataKeys.value = keys;
 })
 
